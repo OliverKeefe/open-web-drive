@@ -19,9 +19,17 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
+      - name: Debug Directory Structure
+        run: |
+          echo "Full path to current directory:"
+          pwd
+          echo "List of files in the current directory:"
+          ls -F
+          echo "Checking backend folder:"
+          ls -F backend/
+
       - name: Run tests
         working-directory: backend
         run: go test ./... -v
 
-      - name: List files for debug
-        run: ls -R
+      
