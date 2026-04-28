@@ -23,5 +23,5 @@ jobs:
         working-directory: backend
         run: go test ./... -v
 
-      -name: List files for debug
-      run: ls -R
+      - name: List files for debug
+        run: ls -R
