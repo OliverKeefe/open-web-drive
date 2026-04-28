@@ -129,6 +129,13 @@ type FindMetadataRequest struct {
 	Version    time.Time   `json:"version,omitempty"`
 }
 
+func (req *FindMetadataRequest) Bind(r *http.Request) error {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (req *FindMetadataRequest) ToModel() MetaData {
 	return MetaData{
 		ID:         req.ID,

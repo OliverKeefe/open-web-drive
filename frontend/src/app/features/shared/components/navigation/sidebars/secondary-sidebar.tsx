@@ -19,9 +19,11 @@ export function SecondarySidebar({ children }: SecondarySidebarProps) {
                         <FolderClosed />
                     </Button>
                 </Link>
-                <Button variant="ghost" className="cursor-pointer">
-                    <GitBranch />
-                </Button>
+                <Link to={"/git"}>
+                    <Button variant="ghost" className="cursor-pointer">
+                            <GitBranch />
+                    </Button>
+                </Link>
                 <Button variant="ghost" className="cursor-pointer">
                     <SquareTerminal />
                 </Button>

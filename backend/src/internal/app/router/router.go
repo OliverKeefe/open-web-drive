@@ -4,14 +4,14 @@ import (
 	"backend/src/internal/auth"
 	"backend/src/internal/db/metadb"
 	"backend/src/internal/middleware"
+	"backend/src/internal/platform"
 	filesvc "backend/src/usecase/files"
-	"context"
 	"net/http"
 )
 
 var (
 	route = func(a *auth.Authenticator, h http.HandlerFunc) http.Handler {
-		return middleware.Protect(context.Background(), a, h)
+		return middleware.Protect(a, h)
 	}
 )
 
@@ -20,7 +20,12 @@ func RegisterFileRoutes(
 	a *auth.Authenticator,
 	db *metadb.MetadataDatabase,
 ) {
-	repo := filesvc.NewRepository(db.Pool)
+
+	s3Client, err := platform.NewS3Client()
+	if err != nil {
+		panic("Can't connect to S3 bucket.")
+	}
+	repo := filesvc.NewRepository(db.Pool, s3Client.Client, "temp-buck")
 	svc := filesvc.NewService(repo)
 	h := filesvc.NewHandler(svc)
 

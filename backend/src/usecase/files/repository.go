@@ -1,26 +1,35 @@
 package files
 
 import (
+	"backend/src/internal/auth"
 	"backend/src/internal/db/metadb"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
 type Repository struct {
-	db metadb.Pool
+	db       metadb.Pool
+	s3Client *s3.Client
+	bucket   string
 }
 
-func NewRepository(db metadb.Pool) *Repository {
+func NewRepository(db metadb.Pool, s3Client *s3.Client, bucket string) *Repository {
 	return &Repository{
-		db: db,
+		db:       db,
+		s3Client: s3Client,
+		bucket:   bucket,
 	}
 }
 
@@ -57,8 +66,36 @@ func (repo *Repository) SaveMetaData(ctx context.Context, meta MetaData) (MetaDa
 	return meta, nil
 }
 
-// Helper method to save FilePart binary data.
+func (repo *Repository) SaveToS3(ctx context.Context, basePath string, rdr io.Reader, filename string) error {
+	ownerID, ok := auth.UserIDFromCtx(ctx)
+	if !ok {
+		return errors.New("unable to get ownerID from context")
+	}
+
+	key := fmt.Sprintf("%s/%s", ownerID, filename)
+
+	var partMiBs int64 = 10
+
+	uploader := transfermanager.New(repo.s3Client, func(o *transfermanager.Options) {
+		o.PartSizeBytes = partMiBs * 1024 * 1024
+		o.Concurrency = 3
+	})
+
+	_, err := uploader.UploadObject(ctx, &transfermanager.UploadObjectInput{
+		Bucket: aws.String(repo.bucket),
+		Key:    aws.String(key),
+		Body:   rdr,
+	})
+	if err != nil {
+		log.Printf("S3 transfer manager put error: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func (repo *Repository) SaveFileData(basePath string, rdr io.Reader, filename string) error {
+	log.Printf("SaveFileData called")
 	if err := os.MkdirAll(basePath, 0755); err != nil {
 		return err
 	}
@@ -200,6 +237,10 @@ func (repo *Repository) DeleteMetadata(ctx context.Context, id uuid.UUID, ownerI
 	}
 
 	return nil
+}
+
+func (repo *Repository) DeleteFileData(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error {
+	panic("not implemented")
 }
 
 func (repo *Repository) Modify(ctx context.Context, model MetaData) (error, MetaData) {

@@ -42,7 +42,8 @@ type ExtractedMetadata = {
 export async function extractMetadata(file: File): Promise<Metadata> {
     const mediaInfo = await MediaInfo({
         format: "JSON",
-        locateFile: (path) => `/mediainfo/dist/${path}`,
+        //locateFile: (path) => `/mediainfo/dist/${path}`,
+        locateFile: () => `/MediaInfoModule.wasm`,
     })
 
     const [result, checksum] = await Promise.all([

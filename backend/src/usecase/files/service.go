@@ -2,6 +2,7 @@ package files
 
 import (
 	"backend/src/internal/auth"
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -18,8 +19,10 @@ import (
 type repository interface {
 	SaveMetaData(ctx context.Context, meta MetaData) (MetaData, error) //TODO: Change order of params
 	SaveFileData(basePath string, rdr io.Reader, filename string) error
+	SaveToS3(ctx context.Context, basePath string, rdr io.Reader, filename string) error
 	FindMetadata(ctx context.Context, model MetaData) ([]MetaData, error)
 	DeleteMetadata(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error
+	DeleteFileData(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID) error
 	FindAllMetadata(ctx context.Context, req GetAllMetadataRequest) ([]MetaData, error)
 	MarkForDeletion(ctx context.Context, id uuid.UUID, id2 uuid.UUID) error
 }
@@ -57,7 +60,7 @@ func (svc *Service) Upload(ctx context.Context, r *http.Request) ([]MetaData, er
 	if err != nil {
 		return nil, err
 	}
-
+	debug := false
 	metadataByID := make(map[string]MetaData)
 
 	for {
@@ -86,6 +89,7 @@ func (svc *Service) Upload(ctx context.Context, r *http.Request) ([]MetaData, er
 			if !ok {
 				return nil, errors.New("could not get userID from context")
 			}
+
 			ownerID, err := uuid.Parse(userId)
 			if err != nil {
 				return nil, err
@@ -108,17 +112,36 @@ func (svc *Service) Upload(ctx context.Context, r *http.Request) ([]MetaData, er
 			// File has to be saved here, if you try to pass this to another temp location
 			// in memory then the data will be unusable.
 
-			hash := sha256.New()
-
-			if err := svc.repo.SaveFileData(
-				"/home/oliver/Development/25-26_CE301_keefe_oliver_b/backend/tempfiles",
-				io.TeeReader(part, hash),
-				part.FileName(),
-			); err != nil {
+			data, err := io.ReadAll(part)
+			if err != nil {
 				return nil, err
 			}
+
+			hash := sha256.Sum256(data)
+
+			if debug == false {
+				err = svc.repo.SaveToS3(
+					ctx,
+					"",
+					bytes.NewReader(data),
+					part.FileName(),
+				)
+			}
+			if debug == true {
+
+				hash := sha256.New()
+
+				if err := svc.repo.SaveFileData(
+					"/home/oliver/Development/gestalt/gestalt/backend/tempfiles",
+					io.TeeReader(part, hash),
+					part.FileName(),
+				); err != nil {
+					return nil, err
+				}
+			}
+
 			md := metadataByID[idStr]
-			md.CheckSum = hash.Sum(nil)
+			md.CheckSum = hash[:]
 			metadataByID[idStr] = md
 		}
 	}

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"backend/src/internal/auth"
-	"context"
 	"net/http"
 	"strings"
 )
@@ -14,7 +13,7 @@ func AuthMiddleware(a auth.Authenticator) func(http.Handler) http.Handler {
 	panic("not implemented")
 }
 
-func Protect(ctx context.Context, a *auth.Authenticator, next http.Handler) http.Handler {
+func Protect(a *auth.Authenticator, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := r.Header.Get("Authorization")
 		if !strings.HasPrefix(h, "Bearer ") {
@@ -23,7 +22,7 @@ func Protect(ctx context.Context, a *auth.Authenticator, next http.Handler) http
 		}
 
 		token := strings.TrimPrefix(h, "Bearer ")
-		newCtx, ok, err := a.ValidateJWT(ctx, token)
+		newCtx, ok, err := a.ValidateJWT(r.Context(), token)
 		if err != nil || !ok {
 			http.Error(w, "unauthorized, invalid token", http.StatusUnauthorized)
 			return
