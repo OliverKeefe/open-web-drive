@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -20,6 +21,7 @@ type repository interface {
 	SaveMetaData(ctx context.Context, meta MetaData) (MetaData, error) //TODO: Change order of params
 	SaveFileData(basePath string, rdr io.Reader, filename string) error
 	SaveToS3(ctx context.Context, basePath string, rdr io.Reader, filename string) error
+	Download(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID) error
 	FindMetadata(ctx context.Context, model MetaData) ([]MetaData, error)
 	DeleteMetadata(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error
 	DeleteFileData(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID) error
@@ -208,6 +210,11 @@ func (svc *Service) Delete(ctx context.Context, request DeleteRequest) error {
 		log.Printf("unable to parse userID string to uuid")
 	}
 
+	err = svc.repo.DeleteFileData(ctx, request.ID, ownerID)
+	if err != nil {
+		return fmt.Errorf("unable to delete file data, %v", err)
+	}
+
 	err = svc.repo.DeleteMetadata(ctx, request.ID, ownerID)
 	if err != nil {
 		log.Printf("could not delete file metadata, %v", err)
@@ -231,6 +238,26 @@ func (svc *Service) MoveToRubbish(ctx context.Context, request DeleteRequest) er
 	err = svc.repo.MarkForDeletion(ctx, request.ID, ownerID)
 	if err != nil {
 		log.Printf("unable to move file or metadata to rubbish bin, %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (svc *Service) Download(ctx context.Context, request DownloadRequest) error {
+	userID, ok := auth.UserIDFromCtx(ctx)
+	if !ok {
+		return errors.New("unable to get userID from context")
+	}
+
+	ownerID, err := uuid.Parse(userID)
+	if err != nil {
+		log.Printf("unable to parse userID string to uuid")
+	}
+
+	err = svc.repo.Download(ctx, request.ID, ownerID)
+	if err != nil {
+		log.Printf("could not delete file metadata, %v", err)
 		return err
 	}
 
