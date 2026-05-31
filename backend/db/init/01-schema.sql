@@ -44,19 +44,30 @@ CREATE TABLE access_to(
     PRIMARY KEY (access_group_id, access_user_id)
 );
 
+-- FILE
+CREATE TABLE files(
+    id UUID PRIMARY KEY NOT NULL,
+    owner_id UUID REFERENCES users(id) NOT NULL,
+);
+
 -- FILE METADATA
 CREATE TABLE file_metadata(
     id UUID PRIMARY KEY NOT NULL,
     file_name VARCHAR(255) NOT NULL,
     path VARCHAR(255) NOT NULL,
     size BIGINT NOT NULL,
-    -- mode BIGINT NOT NULL,
-    file_type VARCHAR(255),
-    modified_at TIMESTAMP, --NOT NULL,
-    uploaded_at TIMESTAMP, --NOT NULL,
-    version TIMESTAMP, --NOT NULL,
-    checksum BYTEA,
-    owner_id UUID NOT NULL
+    file_type VARCHAR(12),
+    modified_at TIMESTAMP NOT NULL,
+    uploaded_at TIMESTAMP NOT NULL,
+    version UUID NOT NULL,
+    hash BYTEA,
+);
+
+-- FILE VERSIONS
+CREATE TABLE file_versions(
+    version_id UUID REFERENCES file_metadata(id) NOT NULL,
+    file_id UUID REFERENCES files(id) NOT NULL,
+    CONSTRAINT pk_file_version PRIMARY KEY (file_id, version_id)
 );
 
 -- INDEX FOR FILE METADATA PAGINATION
