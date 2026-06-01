@@ -50,6 +50,20 @@ CREATE TABLE files(
     owner_id UUID REFERENCES users(id) NOT NULL,
 );
 
+CREATE TABLE permissions(
+    id UUID PRIMARY KEY NOT NULL,
+    file_id REFERENCES files(id) NOT NULL,
+    grantee_type VARCHAR(10) NOT NULL,
+    grantee_id UUID NOT NULL,
+    access_level CHAR -- May need to be altered again.
+);
+
+CREATE TABLE file_permissions(
+    file_id REFERENCES files(id) NOT NULL,
+    permissions_id REFERENCES permissions(id) NOT NULL,
+    PRIMARY KEY (file_id, permissions_id)
+);
+
 -- FILE METADATA
 CREATE TABLE file_metadata(
     id UUID PRIMARY KEY NOT NULL,
