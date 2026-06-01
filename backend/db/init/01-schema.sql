@@ -85,18 +85,8 @@ CREATE TABLE file_versions(
 );
 
 -- INDEX FOR FILE METADATA PAGINATION
-CREATE INDEX CONCURRENTLY idx_file_owner_modified_desc
-ON file_metadata (owner_id, modified_at DESC, id DESC);
-
--- DIRECTORY METADATA
-CREATE TABLE dir_metadata(
-    id UUID PRIMARY KEY NOT NULL,
-    dir_name VARCHAR(255) NOT NULL,
-    path VARCHAR(255) NOT NULL,
-    modified_at TIMESTAMP NOT NULL,
-    uploaded_at TIMESTAMP NOT NULL,
-    owner UUID NOT NULL REFERENCES users(id)
-);
+CREATE INDEX CONCURRENTLY idx_file_user_modified_desc
+ON file_metadata (user_id, modified_at DESC, id DESC);
 
 -- FILE <-> USER ACCESS (MtM)
 CREATE TABLE file_metadata_access(
