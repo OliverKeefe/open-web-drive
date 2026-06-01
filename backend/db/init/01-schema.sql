@@ -47,7 +47,7 @@ CREATE TABLE access_to(
 -- FILE
 CREATE TABLE files(
     id UUID PRIMARY KEY NOT NULL,
-    owner_id UUID REFERENCES users(id) NOT NULL,
+    permissions_id REFERENCES permissions(id)
 );
 
 CREATE TABLE permissions(
