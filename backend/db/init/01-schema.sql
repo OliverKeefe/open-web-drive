@@ -35,7 +35,7 @@ CREATE TABLE storage_bucket (
 );
 
 -- BUCKET GROUP MEMBERSHIP
-CREATE TABLE bucket_groups (
+CREATE TABLE storage_bucket_groups (
     bucket_id UUID NOT NULL REFERENCES bucket(id) ON DELETE CASCADE,
     group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     PRIMARY KEY (bucket_id, group_id)
