@@ -31,20 +31,22 @@ type MetaData struct {
 	Version    time.Time   `json:"version"`
 }
 
-type IPFSMetadata struct {
-	CID        string     `json:"cid"`
-	Space      string     `json:"space"`
-	Visibility Visibility `json:"visibility"`
-	DID        string     `json:"did"`
-	Shards     []string   `json:"shards"`
-}
-
 type Visibility int
 
 const (
 	Public Visibility = iota
 	Private
 )
+
+type IPFSMetadata struct {
+	CID            string     `json:"cid"`
+	Space          string     `json:"space"`
+	Visibility     Visibility `json:"visibility"`
+	DID            string     `json:"did"`
+	Shards         []string   `json:"shards"`
+	Uri            string     `json:"uri"`
+	HTTPGatewayURL string     `json:"http_gateway_url"`
+}
 
 type AccessMetadata struct {
 	OwnerID     uuid.UUID   `json:"owner_id"`
