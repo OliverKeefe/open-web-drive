@@ -26,12 +26,11 @@ CREATE TABLE roles (
 );
 
 -- BUCKETS
-CREATE TABLE bucket (
+CREATE TABLE storage_bucket (
     id UUID PRIMARY KEY NOT NULL,
-    tenant_id UUID NOT NULL REFERENCES tenant(id) ON DELETE CASCADE,
+    org_id UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
     name VARCHAR(64) NOT NULL,
-    size BIGINT NOT NULL,
-    creator UUID NOT NULL REFERENCES users(id),
+    groups NOT NULL REFERENCES storage_bucket_groups
     owner UUID NOT NULL REFERENCES users(id)
 );
 
