@@ -20,6 +20,11 @@ CREATE TABLE groups (
     name VARCHAR(64) NOT NULL
 );
 
+CREATE TABLE roles (
+    id UUID PRIMARY KEY NOT NULL,
+    name VARCHAR(64) NOT NULL
+);
+
 -- BUCKETS
 CREATE TABLE bucket (
     id UUID PRIMARY KEY NOT NULL,
