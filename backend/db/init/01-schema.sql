@@ -66,6 +66,7 @@ CREATE TABLE file_metadata(
     id UUID PRIMARY KEY NOT NULL,
     file_name VARCHAR(255) NOT NULL,
     path VARCHAR(255) NOT NULL,
+    relative_path VARCHAR(255) NOT NULL,
     size BIGINT NOT NULL,
     file_type VARCHAR(12),
     modified_at TIMESTAMP NOT NULL,
