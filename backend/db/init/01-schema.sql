@@ -9,7 +9,7 @@ CREATE TABLE users (
 );
 
 -- TENANTS
-CREATE TABLE org (
+CREATE TABLE orgs (
     id UUID PRIMARY KEY NOT NULL,
     name VARCHAR(64) NOT NULL
 );
