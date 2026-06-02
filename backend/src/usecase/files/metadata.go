@@ -55,15 +55,16 @@ type AccessMetadata struct {
 }
 
 type FileMetadata struct {
-	ID         uuid.UUID `json:"uuid"`
-	FileName   string    `json:"file_name"`
-	Path       string    `json:"path"`
-	Size       uint64    `json:"size"`
-	FileType   string    `json:"file_type"`
-	ModifiedAt time.Time `json:"modified_at"`
-	UploadedAt time.Time `json:"created_at"`
-	CheckSum   []byte    `json:"checksum"`
-	Version    time.Time `json:"version"`
+	ID           uuid.UUID `json:"uuid"`
+	FileName     string    `json:"file_name"`
+	Path         string    `json:"path"`
+	RelativePath string    `json:"relative_path"`
+	Size         uint64    `json:"size"`
+	FileType     string    `json:"file_type"`
+	ModifiedAt   time.Time `json:"modified_at"`
+	UploadedAt   time.Time `json:"created_at"`
+	Version      uuid.UUID `json:"version"`
+	Hash         [32]byte  `json:"hash"`
 }
 
 func (m *MetaData) ToResponse() MetaDataResponse {
