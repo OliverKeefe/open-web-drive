@@ -41,13 +41,6 @@ CREATE TABLE storage_bucket_groups (
     PRIMARY KEY (bucket_id, group_id)
 );
 
--- ACCESS TO FILE
-CREATE TABLE access_to(
-    access_group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    access_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    PRIMARY KEY (access_group_id, access_user_id)
-);
-
 -- FILE
 CREATE TABLE files(
     id UUID PRIMARY KEY NOT NULL,
