@@ -68,11 +68,11 @@ CREATE TABLE file_metadata(
     path VARCHAR(255) NOT NULL,
     relative_path VARCHAR(255) NOT NULL,
     size BIGINT NOT NULL,
-    file_type VARCHAR(12),
+    file_type VARCHAR(12) NOT NULL,
     modified_at TIMESTAMP NOT NULL,
     uploaded_at TIMESTAMP NOT NULL,
     version UUID NOT NULL,
-    hash BYTEA,
+    hash BYTEA NOT NULL,
 );
 
 -- FILE VERSIONS
