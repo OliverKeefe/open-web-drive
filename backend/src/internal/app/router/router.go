@@ -2,7 +2,7 @@ package router
 
 import (
 	"backend/src/internal/auth"
-	"backend/src/internal/db/metadb"
+	"backend/src/internal/database"
 	"backend/src/internal/middleware"
 	"backend/src/internal/platform"
 	filesvc "backend/src/usecase/files"
@@ -18,7 +18,7 @@ var (
 func RegisterFileRoutes(
 	mux *http.ServeMux,
 	a *auth.Authenticator,
-	db *metadb.MetadataDatabase,
+	db *database.MetadataDatabase,
 ) {
 
 	s3Client, err := platform.NewS3Client()
