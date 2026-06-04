@@ -55,16 +55,26 @@ type AccessMetadata struct {
 }
 
 type FileMetadata struct {
-	ID           uuid.UUID `json:"uuid"`
-	FileName     string    `json:"file_name"`
-	Path         string    `json:"path"`
-	RelativePath string    `json:"relative_path"`
-	Size         uint64    `json:"size"`
-	FileType     string    `json:"file_type"`
-	ModifiedAt   time.Time `json:"modified_at"`
-	UploadedAt   time.Time `json:"created_at"`
-	Version      uuid.UUID `json:"version"`
-	Hash         [32]byte  `json:"hash"`
+	ID           uuid.UUID         `json:"uuid"`
+	FileName     string            `json:"file_name"`
+	Path         string            `json:"path"`
+	RelativePath string            `json:"relative_path"`
+	Size         uint64            `json:"size"`
+	FileType     string            `json:"file_type"`
+	ModifiedAt   time.Time         `json:"modified_at"`
+	UploadedAt   time.Time         `json:"uploaded_at"`
+	CreatedAt    time.Time         `json:"created_at"`
+	Version      uuid.UUID         `json:"version"`
+	Hash         [32]byte          `json:"hash"`
+	Permissions  []FilePermissions `json:"permissions"`
+}
+
+type FilePermissions struct {
+	//FileID       uuid.UUID `json:"file_id"`
+	FileID      uuid.UUID `json:"permissions_id"`
+	GranteeType string    `json:"grantee_type"`
+	GranteeID   uuid.UUID `json:"grantee_id"`
+	AccessLevel uuid.UUID `json:"access_level"`
 }
 
 func (m *MetaData) ToResponse() MetaDataResponse {
