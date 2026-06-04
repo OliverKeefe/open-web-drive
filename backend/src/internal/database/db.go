@@ -1,4 +1,4 @@
-package metadb
+package database
 
 import (
 	"context"
