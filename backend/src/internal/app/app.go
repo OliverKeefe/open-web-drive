@@ -3,7 +3,7 @@ package app
 import (
 	"backend/src/internal/app/router"
 	"backend/src/internal/auth"
-	"backend/src/internal/db/metadb"
+	"backend/src/internal/database"
 	"backend/src/internal/middleware"
 	"context"
 	"fmt"
@@ -22,7 +22,7 @@ func Run() error {
 		return err
 	}
 
-	db, err := metadb.New(ctx, "DATABASE_URL")
+	db, err := database.New(ctx, "DATABASE_URL")
 	if err != nil {
 		return err
 	}
