@@ -2,7 +2,7 @@ package files
 
 import (
 	"backend/src/internal/auth"
-	"backend/src/internal/db/metadb"
+	"backend/src/internal/database"
 	"context"
 	"errors"
 	"fmt"
@@ -20,12 +20,12 @@ import (
 )
 
 type Repository struct {
-	db       metadb.Pool
+	db       database.Pool
 	s3Client *s3.Client
 	bucket   string
 }
 
-func NewRepository(db metadb.Pool, s3Client *s3.Client, bucket string) *Repository {
+func NewRepository(db database.Pool, s3Client *s3.Client, bucket string) *Repository {
 	return &Repository{
 		db:       db,
 		s3Client: s3Client,
