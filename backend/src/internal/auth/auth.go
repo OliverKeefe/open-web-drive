@@ -27,3 +27,8 @@ type OAuth2 interface {
 type UCAN interface {
 	ValidateJWT(token jwt.Token) (bool, error)
 }
+
+func UserIDFromCtx(ctx context.Context) (string, bool) {
+	userID, ok := ctx.Value(userIDKey).(string)
+	return userID, ok
+}
