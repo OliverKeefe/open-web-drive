@@ -61,18 +61,27 @@ CREATE TABLE file_permissions(
     PRIMARY KEY (file_id, permissions_id)
 );
 
--- FILE METADATA
+
+-- METADATA
+CREATE TABLE metadata(
+    id UUID PRIMARY KEY NOT NULL DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL DELETE CASCADE,
+    path VARCHAR(255) NOT NULL DELETE CASCADE,
+    relative_path VARCHAR(255) NOT NULL DELETE CASCADE,
+    size BIGINT NOT NULL DELETE CASCADE,
+    file_type VARCHAR(12) NOT NULL DELETE CASCADE,
+    modified_at TIMESTAMP NOT NULL DELETE CASCADE,
+    uploaded_at TIMESTAMP NOT NULL DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DELETE CASCADE,
+    version UUID NOT NULL DELETE CASCADE,
+    hash BYTEA NOT NULL DELETE CASCADE,
+);
+
+-- FILE <-> METADATA
 CREATE TABLE file_metadata(
-    id UUID PRIMARY KEY NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    path VARCHAR(255) NOT NULL,
-    relative_path VARCHAR(255) NOT NULL,
-    size BIGINT NOT NULL,
-    file_type VARCHAR(12) NOT NULL,
-    modified_at TIMESTAMP NOT NULL,
-    uploaded_at TIMESTAMP NOT NULL,
-    version UUID NOT NULL,
-    hash BYTEA NOT NULL,
+    file_id UUID NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    metadata_id UUID NOT NULL REFERENCES metadata(id) ON DELETE CASCADE,
+    CONSTRAINT pk_file_metadata PRIMARY KEY (file_id, metadata_id)
 );
 
 -- FILE VERSIONS
