@@ -47,3 +47,14 @@ func FindMetadataQuery(m MetaData) (string, []any) {
 
 	return sql, args
 }
+
+
+func (db *FileRepository) CheckExists(ctx context.Context, ID uuid.UUID) (bool, error) {
+	const sql = `SELECT id FROM metadata WHERE id = ($1)`
+	status, err := db.pool.Exec(ctx, sql, ID)
+	if err != nil {
+		slog.Error("failed existence check", "error", "status:", status, err)
+		return false, err
+	}
+	return true, nil
+}
