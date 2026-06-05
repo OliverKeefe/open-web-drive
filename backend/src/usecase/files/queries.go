@@ -2,9 +2,18 @@ package files
 
 import (
 	query "backend/src/internal/api/query"
+	"backend/src/internal/database"
+	"context"
 	"fmt"
+	"log/slog"
 	"strings"
+
+	"github.com/google/uuid"
 )
+
+type FileRepository struct {
+	pool database.Pool
+}
 
 func FindMetadataQuery(m MetaData) (string, []any) {
 	const baseQuery = `SELECT id, file_name, path, size, file_type, modified_at, 
@@ -48,6 +57,13 @@ func FindMetadataQuery(m MetaData) (string, []any) {
 	return sql, args
 }
 
+func (db *FileRepository) Persist() {
+
+}
+
+func (db *FileRepository) FindMetadataByID(ctx context.Context, ID uuid.UUID) (Metadata, error) {
+	panic("not implemented")
+}
 
 func (db *FileRepository) CheckExists(ctx context.Context, ID uuid.UUID) (bool, error) {
 	const sql = `SELECT id FROM metadata WHERE id = ($1)`
