@@ -56,6 +56,7 @@ type AccessMetadata struct {
 
 type FileMetadata struct {
 	ID           uuid.UUID         `json:"uuid"`
+	OwnerID      uuid.UUID         `json:"owner_id"`
 	FileName     string            `json:"file_name"`
 	Path         string            `json:"path"`
 	RelativePath string            `json:"relative_path"`
