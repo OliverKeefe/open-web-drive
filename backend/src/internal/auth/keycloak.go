@@ -9,9 +9,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type contextKey string
+type ctxStringKey string
 
-const userIDKey contextKey = "userID"
+type ctxIntKey int
+
+const userIDKey ctxStringKey = "userID"
+const claimsKey ctxIntKey = iota
 
 type Authenticator struct {
 	Issuer  string
