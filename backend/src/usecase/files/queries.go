@@ -74,3 +74,32 @@ func (db *FileRepository) CheckExists(ctx context.Context, ID uuid.UUID) (bool, 
 	}
 	return true, nil
 }
+
+func (db *FileRepository) PersistMetadata(ctx context.Context, metadata FileMetadata) error {
+	const query = `INSERT INTO file_metadata (id, file_name, path, size, file_type, 
+                           modified_at, uploaded_at, version, checksum, owner_id) 
+				   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
+
+	_, err := db.pool.Exec(
+		ctx,
+		query,
+		metadata.ID,
+		metadata.OwnerID,
+		metadata.FileName,
+		metadata.Path,
+		metadata.RelativePath,
+		metadata.Size,
+		metadata.FileType,
+		metadata.ModifiedAt,
+		metadata.UploadedAt,
+		metadata.CreatedAt,
+		metadata.Version,
+		metadata.Hash,
+		metadata.Permissions,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
