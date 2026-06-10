@@ -77,3 +77,7 @@ func UserIDFromCtx(ctx context.Context) (string, bool) {
 func (k *Authenticator) InjectUserID(ctx context.Context, userID string) context.Context {
 	return context.WithValue(ctx, userIDKey, userID)
 }
+
+func (k *Authenticator) InjectClaims(ctx context.Context, claims map[string]interface{}) context.Context {
+	return context.WithValue(ctx, claimsKey, claims)
+}
