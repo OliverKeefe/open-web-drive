@@ -32,3 +32,8 @@ func UserIDFromCtx(ctx context.Context) (string, bool) {
 	userID, ok := ctx.Value(userIDKey).(string)
 	return userID, ok
 }
+
+func ClaimsFromCtx(ctx context.Context) (map[string]interface{}, bool) {
+	claims, ok := ctx.Value(claimsKey).(map[string]interface{})
+	return claims, ok
+}
