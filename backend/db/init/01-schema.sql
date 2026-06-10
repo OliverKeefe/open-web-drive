@@ -20,6 +20,12 @@ CREATE TABLE groups (
     name VARCHAR(64) NOT NULL
 );
 
+CREATE TABLE group_permissions (
+    group_id REFERENCES groups(id) ON DELETE CASCADE,
+    user_id REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (group_id, user_id)
+);
+
 CREATE TABLE roles (
     id UUID PRIMARY KEY NOT NULL,
     name VARCHAR(64) NOT NULL
