@@ -73,6 +73,11 @@ CREATE TABLE file_permissions(
     PRIMARY KEY (file_id, permissions_id)
 );
 
+CREATE TABLE file_groups(
+    file_id REFERENCES files(id) ON DELETE CASCADE,
+    group_id REFERENCES groups(id) ON DELETE CASCADE,
+    PRIMARY KEY (file_id, group_id)
+);
 
 -- METADATA
 CREATE TABLE metadata(
