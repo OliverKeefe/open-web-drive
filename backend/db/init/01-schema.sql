@@ -61,6 +61,12 @@ CREATE TABLE permissions(
     access_level CHAR -- May need to be altered again.
 );
 
+CREATE TABLE permission_access_levels (
+    permission_id REFERENCES permissions(id),
+    access_level_id REFERENCES access_levels(id),
+    PRIMARY KEY (permission_id, access_level_id)
+);
+
 CREATE TABLE file_permissions(
     file_id REFERENCES files(id) NOT NULL,
     permissions_id REFERENCES permissions(id) NOT NULL,
