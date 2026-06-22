@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metadata-database-deployment
+  labels:
+    app: metadata-database-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metadata-database-postgres
+  template:
+    metadata:
+      labels:
+        app: metadata-database-postgres
+    spec:
+      containers:
+        - name: postgres-18-4
+          image: postgres:18-trixie
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: metadata-database-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: metadata-database-secret
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: metadata-database-secret
+                  key: database
+          volumeMounts:
+            - name: metadata-database-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: metadata-database-storage
+          persistentVolumeClaim:
+            claimName: metadata-database-pvc
+      restartPolicy: Always
+      
