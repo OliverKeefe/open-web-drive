@@ -5,9 +5,7 @@ CREATE TABLE groups (
 );
 
 CREATE TABLE group_memberships (
-    group_id REFERENCES groups(id) ON DELETE CASCADE,
-    user_id REFERENCES users(id) ON DELETE CASCADE,
-    PRIMARY KEY (group_id, user_id)
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT pk_group_memberships PRIMARY KEY (group_id, user_id)
 );
