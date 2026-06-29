@@ -49,8 +49,8 @@ CREATE TABLE file_versions (
 -- FILE <-> USER ACCESS (MtM)
 CREATE TABLE file_metadata_access (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    file_id UUID NOT NULL REFERENCES file_metadata(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, file_id)
+    file_metadata_id UUID NOT NULL REFERENCES file_metadata(id) ON DELETE CASCADE,
+    CONSTRAINT pk_file_metadata_access PRIMARY KEY (user_id, file_metadata_id)
 );
 -- FILE <->  GROUP ACCESS (MtM)
 CREATE TABLE file_metadata_group_access (
