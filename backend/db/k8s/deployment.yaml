@@ -39,7 +39,7 @@ spec:
                   key: database
           volumeMounts:
             - name: metadata-database-storage
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql
       volumes:
         - name: metadata-database-storage
           persistentVolumeClaim:
