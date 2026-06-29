@@ -1,18 +1,18 @@
 -- FILE
 CREATE TABLE files (
     id UUID PRIMARY KEY NOT NULL,
-    permissions_id REFERENCES permissions(id)
+    permissions_id UUID REFERENCES permissions(id)
 );
 
 CREATE TABLE file_permissions (
-    file_id REFERENCES files(id) NOT NULL,
-    permissions_id REFERENCES permissions(id) NOT NULL,
+    file_id UUID REFERENCES files(id) NOT NULL,
+    permissions_id UUID REFERENCES permissions(id) NOT NULL,
     PRIMARY KEY (file_id, permissions_id)
 );
 
 CREATE TABLE file_groups (
-    file_id REFERENCES files(id) ON DELETE CASCADE,
-    group_id REFERENCES groups(id) ON DELETE CASCADE,
+    file_id UUID REFERENCES files(id) ON DELETE CASCADE,
+    group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
     PRIMARY KEY (file_id, group_id)
 );
 
