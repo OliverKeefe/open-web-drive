@@ -33,6 +33,7 @@ CREATE TABLE metadata (
 
 -- FILE <-> METADATA
 CREATE TABLE file_metadata (
+    id UUID DEFAULT uuidv7() PRIMARY KEY,
     file_id UUID NOT NULL REFERENCES files(id) ON DELETE CASCADE,
     metadata_id UUID NOT NULL REFERENCES metadata(id) ON DELETE CASCADE,
     CONSTRAINT pk_file_metadata PRIMARY KEY (file_id, metadata_id)
@@ -51,7 +52,6 @@ CREATE TABLE file_metadata_access (
     file_id UUID NOT NULL REFERENCES file_metadata(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, file_id)
 );
-
 -- FILE <->  GROUP ACCESS (MtM)
 CREATE TABLE file_metadata_group_access (
     file_id UUID REFERENCES file_metadata(id) ON DELETE CASCADE,
