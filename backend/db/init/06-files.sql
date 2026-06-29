@@ -36,7 +36,7 @@ CREATE TABLE file_metadata (
     id UUID DEFAULT uuidv7() PRIMARY KEY,
     file_id UUID NOT NULL REFERENCES files(id) ON DELETE CASCADE,
     metadata_id UUID NOT NULL REFERENCES metadata(id) ON DELETE CASCADE,
-    CONSTRAINT pk_file_metadata PRIMARY KEY (file_id, metadata_id)
+    CONSTRAINT uq_file_metadata UNIQUE (file_id, metadata_id)
 );
 
 -- FILE VERSIONS
