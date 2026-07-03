@@ -37,6 +37,22 @@ func NewUploadService(client *s3.Client, bucket string) *UploadService {
 }
 
 func (svc *UploadService) Handle(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromCtx(r.Context())
+	if !ok {
+		http.Error(w, "upload failed", http.StatusUnauthorized)
+		return
+	}
+
+	hasClaim, err := auth.HasClaim(r.Context(), uuid.MustParse(userID), "permissions:files:write")
+	if err != nil {
+		slog.Error("upload failed", "error", err)
+	}
+
+	if !hasClaim {
+		http.Error(w, "upload failed", http.StatusUnauthorized)
+		return
+	}
+
 	// FYI - 5<<20 is a bitshift operation (5*2^20 = 5,242,880 Bytes or 5 MegaBytes)
 	r.Body = http.MaxBytesReader(w, r.Body, 5<<20)
 	if err := svc.execute(r); err != nil {
