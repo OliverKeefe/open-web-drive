@@ -3,36 +3,33 @@ package files
 import (
 	"backend/src/internal/api/message"
 	"backend/src/internal/auth"
-	"backend/src/internal/database"
 	"backend/src/internal/platform"
 	"bytes"
 	"context"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 )
 
 type UploadService struct {
-	repository *FileRepository
-	s3Client   *platform.S3Client
-	provider   *platform.Provider
-	bucket     *string
+	Db                DB
+	BlobStorageClient *platform.BlobStorageClient
+	bucket            string
 }
 
-func NewUploadService(client *s3.Client, bucket string) *UploadService {
+func NewUploadService(db DB, client *platform.BlobStorageClient, bucket string) *UploadService {
 	return &UploadService{
-		s3Client: client,
-		bucket:   bucket,
+		Db:                db,
+		BlobStorageClient: client,
+		bucket:            bucket,
 	}
 }
 
@@ -150,7 +147,7 @@ func (svc *UploadService) execute(r *http.Request) error {
 
 			data, err := io.ReadAll(part)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			err = svc.saveFileData(
@@ -164,6 +161,7 @@ func (svc *UploadService) execute(r *http.Request) error {
 			metadataByID[idToStr] = md
 		}
 	}
+
 	var newMetadata []FileMetadata
 	for _, md := range metadataByID {
 		newMd, err := svc.saveMetadata(r.Context(), md)
