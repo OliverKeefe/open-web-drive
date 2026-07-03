@@ -93,7 +93,7 @@ func (svc *UploadService) execute(r *http.Request) error {
 
 	metadataByID := make(map[string]FileMetadata)
 
-	userID, ok := auth.UserIDFromCtx(r.Context())
+	userID, ok := auth.UserIDFromCtx(ctx)
 	if !ok {
 		return errors.New("unable to get UserID from context")
 	}
