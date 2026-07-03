@@ -176,11 +176,16 @@ func (svc *UploadService) execute(r *http.Request) error {
 	return nil
 }
 
-func (svc *UploadService) saveFileData(ctx context.Context, ownerID uuid.UUID, r bytes.Reader, fileName string) error {
-	err := svc.s3Client.SaveToS3(ctx, ownerID, r, &svc.bucket, fileName)
+func (svc *UploadService) saveFileData(ctx context.Context, ownerID uuid.UUID, r io.Reader, fileName string) error {
+	key := fmt.Sprintf("%s-%s", ownerID, fileName)
+
+	err := svc.BlobStorageClient.MultipartUpload(ctx, key, r, nil)
 	if err != nil {
 		return err
 	}
+
+	return nil
+
 }
 
 func (svc *UploadService) saveMetadata(ctx context.Context, metadata FileMetadata) error {
