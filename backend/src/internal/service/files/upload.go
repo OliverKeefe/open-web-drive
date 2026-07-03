@@ -186,16 +186,16 @@ func (svc *UploadService) saveFileData(ctx context.Context, ownerID uuid.UUID, r
 func (svc *UploadService) saveMetadata(ctx context.Context, metadata FileMetadata) (bool, error) {
 	exists, err := svc.repository.CheckExists(ctx, metadata.ID)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if exists {
-		return false, errors.New("file metadata already present in database")
+		return errors.New("file metadata already present in database")
 	}
 
 	if err = svc.repository.PersistMetadata(ctx, metadata); err != nil {
 		return false, err
 	}
 
-	return true, nil
+	return nil
 }
