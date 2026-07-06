@@ -22,14 +22,14 @@ import (
 type UploadService struct {
 	Db                DB
 	BlobStorageClient *platform.BlobStorageClient
-	bucket            string
+	BucketURL         string
 }
 
-func NewUploadService(db DB, client *platform.BlobStorageClient, bucket string) *UploadService {
+func NewUploadService(db DB, client *platform.BlobStorageClient, bucketUrl string) *UploadService {
 	return &UploadService{
 		Db:                db,
 		BlobStorageClient: client,
-		bucket:            bucket,
+		BucketURL:         bucketUrl,
 	}
 }
 
