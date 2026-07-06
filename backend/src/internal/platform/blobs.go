@@ -13,8 +13,6 @@ type BlobStorageClient struct {
 	Bucket *blob.Bucket
 }
 
-func (b *BlobStorageClient) Upload(ctx context.Context, key string, data []byte, opts *blob.WriterOptions) error {
-	return b.Bucket.WriteAll(ctx, key, data, opts)
 func NewBlobStorageClient(ctx context.Context, bucketURL string) (*BlobStorageClient, error) {
 	bucket, err := blob.OpenBucket(ctx, bucketURL)
 	if err != nil {
@@ -26,6 +24,21 @@ func NewBlobStorageClient(ctx context.Context, bucketURL string) (*BlobStorageCl
 	}, nil
 }
 
+func (b *BlobStorageClient) MultipartUpload(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error {
+	w, err := b.Bucket.NewWriter(ctx, key, opts)
+	if err != nil {
+		return fmt.Errorf("failed to open cloud writer: %w", err)
+	}
+
+	if _, err := io.Copy(w, dataStream); err != nil {
+		return fmt.Errorf("multipart upload failed during data stream copy: %w", err)
+	}
+
+	if err := w.Close(); err != nil {
+		return fmt.Errorf("failed to close cloud writer: %w", err)
+	}
+
+	return nil
 }
 
 func (b *BlobStorageClient) Download(ctx context.Context, key string, writer io.Writer, opts *blob.ReaderOptions) error {
