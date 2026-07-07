@@ -13,13 +13,18 @@ import (
 	"github.com/google/uuid"
 )
 
+type deleteRepository interface {
+	DeleteMetadata(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error
+	DeleteFileData(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error
+}
+
 type DeleteService struct {
-	Db                DB
+	Db                deleteRepository
 	BlobStorageClient *platform.BlobStorageClient
 	BucketURL         string
 }
 
-func NewDeleteService(db DB, client *platform.BlobStorageClient, bucketUrl string) *DeleteService {
+func NewDeleteService(db deleteRepository, client *platform.BlobStorageClient, bucketUrl string) *DeleteService {
 	return &DeleteService{
 		Db:                db,
 		BlobStorageClient: client,
