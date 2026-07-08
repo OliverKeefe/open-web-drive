@@ -11,13 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
+type downloadRepository interface {
+	CheckExists(ctx context.Context, ID uuid.UUID) (bool, error)
+}
+
 type DownloadService struct {
-	Db                DB
+	Db                downloadRepository
 	BlobStorageClient *platform.BlobStorageClient
 	BucketURL         string
 }
 
-func NewDownloadService(db DB, client *platform.BlobStorageClient, bucketUrl string) *DownloadService {
+func NewDownloadService(db downloadRepository, client *platform.BlobStorageClient, bucketUrl string) *DownloadService {
 	return &DownloadService{
 		Db:                db,
 		BlobStorageClient: client,
@@ -33,21 +37,21 @@ func (svc *DownloadService) Handle(w http.ResponseWriter, r *http.Request) {
 	panic("not implemented")
 }
 
-func (svc *DownloadService) execute(ctx context.Context, request DownloadRequest) error {
-	userID, ok := auth.UserIDFromCtx(ctx)
-	if !ok {
-		return errors.New("unable to get userID from context")
-	}
+func (svc *DownloadService) execute(ctx context.Context, request DownloadRequest) ([]byte, error) {
+	//userID, ok := auth.UserIDFromCtx(ctx)
+	//if !ok {
+	//	return errors.New("unable to get userID from context")
+	//}
 
-	ownerID, err := uuid.Parse(userID)
-	if err != nil {
-		log.Printf("unable to parse userID string to uuid")
-	}
+	//ownerID, err := uuid.Parse(userID)
+	//if err != nil {
+	//	log.Printf("unable to parse userID string to uuid")
+	//}
 
-	chunk, err := download(ctx, request.ID)
+	chunk, err := svc.download(ctx, request.ID)
 	if err != nil {
 		log.Printf("could not delete file metadata, %v", err)
-		return err
+		return nil, err
 	}
 
 	return chunk, nil
