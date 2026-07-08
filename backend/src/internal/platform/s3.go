@@ -25,7 +25,7 @@ func NewS3Client() (S3Client, error) {
 		config.WithRegion(awsRegion),
 	)
 	if err != nil {
-		log.Fatalf("Cannot load the AWS configs: %s", err)
+		log.Fatalf("cannot load the aws configs: %s", err)
 	}
 
 	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
