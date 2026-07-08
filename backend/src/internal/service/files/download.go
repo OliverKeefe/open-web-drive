@@ -57,6 +57,6 @@ func (svc *DownloadService) execute(ctx context.Context, request DownloadRequest
 	return chunk, nil
 }
 
-func download(ctx context.Context, key uuid.UUID) ([]byte, error) {
+func (svc *DownloadService) download(ctx context.Context, keys []uuid.UUID) ([]byte, error) {
 	panic("not implemented")
 }
