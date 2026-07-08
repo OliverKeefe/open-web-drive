@@ -5,7 +5,8 @@ import (
 	"backend/src/internal/database"
 	"backend/src/internal/middleware"
 	"backend/src/internal/platform"
-	filesvc "backend/src/usecase/files"
+	"backend/src/internal/service/files"
+	"context"
 	"net/http"
 )
 
@@ -15,38 +16,41 @@ var (
 	}
 )
 
-func RegisterFileRoutes(
-	mux *http.ServeMux,
-	a *auth.Authenticator,
-	db *database.MetadataDatabase,
-) {
+func RegisterFileRoutes(mux *http.ServeMux, a *auth.Authenticator, db *database.MetadataDatabase) error {
+	bucketUrl := "test-bucket"
 
-	s3Client, err := platform.NewS3Client()
+	client, err := platform.NewBlobStorageClient(context.Background(), "test-bucket")
 	if err != nil {
-		panic("Can't connect to S3 bucket.")
+		panic(err)
 	}
-	repo := filesvc.NewRepository(db.Pool, s3Client.Client, "temp-buck")
-	svc := filesvc.NewService(repo)
-	h := filesvc.NewHandler(svc)
 
-	upload := route(a, h.Upload)
+	repository := files.NewFileRepository(db.Pool)
+
+	uploadSvc := files.NewUploadService(repository, client, bucketUrl)
+	downloadSvc := files.NewDownloadService(repository, client, bucketUrl)
+	deleteSvc := files.NewDeleteService(repository, client, bucketUrl)
+	updateSvc := files.NewUpdateMetadataService(repository, client, bucketUrl)
+
+	uploadEndpoint := route(a, uploadSvc.Handle)
 	mux.Handle(
 		"POST /api/files/upload",
-		upload,
+		uploadEndpoint,
 	)
-	findMetadata := route(a, h.FindMetadata)
+	downloadRoute := route(a, downloadSvc.Handle)
 	mux.Handle(
-		"POST /api/files/find",
-		findMetadata,
+		"POST /api/files/download",
+		downloadRoute,
 	)
-	getAllMetadata := route(a, h.GetAll)
+	deleteRoute := route(a, deleteSvc.Handle)
 	mux.Handle(
-		"POST /api/files/get-all",
-		getAllMetadata,
+		"DELETE /api/files/delete",
+		deleteRoute,
 	)
-	deleteFile := route(a, h.Delete)
+	updateMetadataRoute := route(a, updateSvc.Handle)
 	mux.Handle(
 		"POST /api/files/delete",
-		deleteFile,
+		updateMetadataRoute,
 	)
+
+	return nil
 }

@@ -62,7 +62,7 @@ func TestNewUploadService(t *testing.T) {
 	}
 
 	if got.Db.pool == want.Db.pool {
-		t.Errorf("UploadService.Db.pool was not initialized")
+		t.Errorf("UploadService.Db.Pool was not initialized")
 	}
 
 }
