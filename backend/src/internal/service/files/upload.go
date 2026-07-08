@@ -19,13 +19,18 @@ import (
 	"github.com/google/uuid"
 )
 
+type uploadRepository interface {
+	PersistMetadata(ctx context.Context, metadata FileMetadata) error
+	CheckExists(ctx context.Context, ID uuid.UUID) (bool, error)
+}
+
 type UploadService struct {
-	Db                DB
+	Db                uploadRepository
 	BlobStorageClient *platform.BlobStorageClient
 	BucketURL         string
 }
 
-func NewUploadService(db DB, client *platform.BlobStorageClient, bucketUrl string) *UploadService {
+func NewUploadService(db uploadRepository, client *platform.BlobStorageClient, bucketUrl string) *UploadService {
 	return &UploadService{
 		Db:                db,
 		BlobStorageClient: client,
