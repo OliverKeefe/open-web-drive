@@ -14,6 +14,14 @@ type SearchService struct {
 	BucketURL         string
 }
 
+func NewSearchService(db searchRepository, client *platform.BlobStorageClient, bucketUrl string) *SearchService {
+	return &SearchService{
+		Db:                db,
+		BlobStorageClient: client,
+		BucketURL:         bucketUrl,
+	}
+}
+
 func (svc *SearchService) Handle(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body == nil || r.ContentLength <= 0 {
