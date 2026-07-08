@@ -6,10 +6,18 @@ import (
 	"context"
 	"log"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
+type searchRepository interface {
+	FindMetadataByID(ctx context.Context, ID uuid.UUID) (Metadata, error)
+	FindMetadata(m MetaData) (string, []any)
+	FindAllMetadata(ctx context.Context, req GetAllMetadataRequest) ([]MetaData, error)
+}
+
 type SearchService struct {
-	db                DB
+	Db                searchRepository
 	BlobStorageClient *platform.BlobStorageClient
 	BucketURL         string
 }
