@@ -1,10 +1,8 @@
 package files
 
 import (
-	"backend/src/internal/auth"
 	"backend/src/internal/platform"
 	"context"
-	"errors"
 	"log"
 	"net/http"
 
