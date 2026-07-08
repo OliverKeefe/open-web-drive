@@ -100,11 +100,6 @@ func (svc *UploadService) execute(r *http.Request) error {
 		return errors.New("unable to get UserID from context")
 	}
 
-	claims, ok := auth.ClaimsFromCtx(r.Context())
-	if !ok {
-		return errors.New("unable to get claims from context.")
-	}
-
 	for {
 		part, err := mr.NextPart()
 		if err == io.EOF {
@@ -168,12 +163,14 @@ func (svc *UploadService) execute(r *http.Request) error {
 	}
 
 	var newMetadata []FileMetadata
+
 	for _, md := range metadataByID {
-		newMd, err := svc.saveMetadata(r.Context(), md)
-		if err != nil {
+		if err := svc.saveMetadata(r.Context(), md); err != nil {
 			return err
 		}
-		newMetadata = append(newMetadata, newMd)
+
+		newMetadata = append(newMetadata, md)
+
 	}
 
 	return nil
