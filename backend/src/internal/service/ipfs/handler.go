@@ -2,7 +2,7 @@ package ipfs
 
 import (
 	"backend/src/internal/ipfs"
-	"backend/src/usecase/files"
+	"backend/src/internal/service/files"
 	"context"
 )
 
