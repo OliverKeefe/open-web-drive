@@ -30,7 +30,9 @@ func Run() error {
 	appMux := http.NewServeMux()
 	var handler http.Handler = appMux
 	handler = middleware.EnableCORS(handler)
-	router.RegisterFileRoutes(appMux, a, db)
+	if err = router.RegisterFileRoutes(appMux, a, db); err != nil {
+		return err
+	}
 	srv := &http.Server{
 		Addr:    ":8081",
 		Handler: handler,
