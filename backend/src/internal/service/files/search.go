@@ -60,12 +60,11 @@ func (svc *SearchService) Handle(w http.ResponseWriter, r *http.Request) {
 
 func (svc *SearchService) execute(ctx context.Context, request GetAllMetadataRequest) ([]MetaDataResponse, error) {
 	var (
-		repo     = svc.db
 		files    []MetaData
 		response []MetaDataResponse
 	)
 
-	files, err := repo.FindAllMetadata(ctx, request)
+	files, err := svc.Db.FindAllMetadata(ctx, request)
 	if err != nil {
 		log.Printf("unable to get all files for user: %s, %v ", request.UserID, err)
 	}
