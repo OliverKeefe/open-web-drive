@@ -69,11 +69,6 @@ func (k *Authenticator) ReissueJWT() (jwt.Token, error) {
 	return tkn, nil
 }
 
-func UserIDFromCtx(ctx context.Context) (string, bool) {
-	userID, ok := ctx.Value(userIDKey).(string)
-	return userID, ok
-}
-
 func (k *Authenticator) InjectUserID(ctx context.Context, userID string) context.Context {
 	return context.WithValue(ctx, userIDKey, userID)
 }
