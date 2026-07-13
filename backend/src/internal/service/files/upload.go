@@ -3,7 +3,6 @@ package files
 import (
 	"backend/src/internal/api/message"
 	"backend/src/internal/auth"
-	"backend/src/internal/platform"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -17,6 +16,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gocloud.dev/blob"
 )
 
 type uploadRepository interface {
@@ -24,13 +24,17 @@ type uploadRepository interface {
 	CheckExists(ctx context.Context, ID uuid.UUID) (bool, error)
 }
 
+type blobStorage interface {
+	MultipartUpload(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error
+}
+
 type UploadService struct {
 	Db                uploadRepository
-	BlobStorageClient *platform.BlobStorageClient
+	BlobStorageClient blobStorage
 	BucketURL         string
 }
 
-func NewUploadService(db uploadRepository, client *platform.BlobStorageClient, bucketUrl string) *UploadService {
+func NewUploadService(db uploadRepository, client blobStorage, bucketUrl string) *UploadService {
 	return &UploadService{
 		Db:                db,
 		BlobStorageClient: client,
