@@ -1,25 +1,30 @@
 package files
 
 import (
-	"backend/src/internal/platform"
 	"context"
+	"io"
 	"log"
 	"net/http"
 
 	"github.com/google/uuid"
+	"gocloud.dev/blob"
 )
 
 type downloadRepository interface {
 	CheckExists(ctx context.Context, ID uuid.UUID) (bool, error)
 }
 
+type downloadBlob interface {
+	Download(ctx context.Context, key string, writer io.Writer, opts *blob.ReaderOptions) error
+}
+
 type DownloadService struct {
 	Db                downloadRepository
-	BlobStorageClient *platform.BlobStorageClient
+	BlobStorageClient downloadBlob
 	BucketURL         string
 }
 
-func NewDownloadService(db downloadRepository, client *platform.BlobStorageClient, bucketUrl string) *DownloadService {
+func NewDownloadService(db downloadRepository, client downloadBlob, bucketUrl string) *DownloadService {
 	return &DownloadService{
 		Db:                db,
 		BlobStorageClient: client,
