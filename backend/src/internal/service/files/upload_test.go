@@ -22,6 +22,13 @@ type mockBlobStorage struct {
 	multipartUploadFunc func(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error
 }
 
+func (m *mockBlobStorage) MultipartUpload(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error {
+	if m.multipartUploadFunc != nil {
+		return m.multipartUploadFunc(ctx, key, dataStream, opts)
+	}
+	return nil
+}
+
 type mockUploadRepository struct {
 	checkExistsFunc     func(ctx context.Context, ID uuid.UUID) (bool, error)
 	persistMetadataFunc func(ctx context.Context, metadata FileMetadata) error
@@ -165,4 +172,150 @@ func TestUploadHandler_InvalidUploadRequest(t *testing.T) {
 	}
 }
 
+func TestUploadService_saveMetadata(t *testing.T) {
+	ctx := context.Background()
+	metadata := FileMetadata{
+		ID:       uuid.New(),
+		FileName: "test.txt",
+	}
+
+	tests := []struct {
+		name        string
+		repo        *mockUploadRepository
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "success",
+			repo: &mockUploadRepository{
+				checkExistsFunc: func(ctx context.Context, ID uuid.UUID) (bool, error) {
+					if ID != metadata.ID {
+						t.Errorf("CheckExists called with wrong ID: got %v, want %v", ID, metadata.ID)
+					}
+					return false, nil
+				},
+				persistMetadataFunc: func(ctx context.Context, md FileMetadata) error {
+					if md.ID != metadata.ID {
+						t.Errorf("PersistMetadata called with wrong metadata: got ID %v, want %v", md.ID, metadata.ID)
+					}
+					return nil
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "check exists returns error",
+			repo: &mockUploadRepository{
+				checkExistsFunc: func(ctx context.Context, ID uuid.UUID) (bool, error) {
+					return false, errors.New("db connection failed")
+				},
+			},
+			wantErr:     true,
+			errContains: "db connection failed",
+		},
+		{
+			name: "metadata already exists",
+			repo: &mockUploadRepository{
+				checkExistsFunc: func(ctx context.Context, ID uuid.UUID) (bool, error) {
+					return true, nil
+				},
+			},
+			wantErr:     true,
+			errContains: "file metadata already present in database",
+		},
+		{
+			name: "persist metadata returns error",
+			repo: &mockUploadRepository{
+				checkExistsFunc: func(ctx context.Context, ID uuid.UUID) (bool, error) {
+					return false, nil
+				},
+				persistMetadataFunc: func(ctx context.Context, md FileMetadata) error {
+					return errors.New("insert failed")
+				},
+			},
+			wantErr:     true,
+			errContains: "insert failed",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := &UploadService{Db: tt.repo}
+
+			err := svc.saveMetadata(ctx, metadata)
+
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("saveMetadata error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if tt.wantErr && tt.errContains != "" {
+				if err.Error() != tt.errContains {
+					t.Fatalf("saveMetadata error = %q, want %q", err.Error(), tt.errContains)
+				}
+			}
+		})
+	}
+}
+
+func TestUploadService_saveFileData(t *testing.T) {
+	ctx := context.Background()
+	ownerID := uuid.New()
+	fileName := "test.txt"
+
+	tests := []struct {
+		name        string
+		blob        *mockBlobStorage
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "success",
+			blob: &mockBlobStorage{
+				multipartUploadFunc: func(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error {
+					expectedKey := ownerID.String() + "-" + fileName
+					if key != expectedKey {
+						t.Errorf("MultipartUpload key = %q; want %q", key, expectedKey)
+					}
+					data, err := io.ReadAll(dataStream)
+					if err != nil {
+						t.Fatalf("failed to read dataStream: %v", err)
+					}
+					if string(data) != "file content" {
+						t.Errorf("MultipartUpload data = %q; want %q", string(data), "file content")
+					}
+					return nil
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "upload error",
+			blob: &mockBlobStorage{
+				multipartUploadFunc: func(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error {
+					return errors.New("upload failed")
+				},
+			},
+			wantErr:     true,
+			errContains: "upload failed",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := &UploadService{BlobStorageClient: tt.blob}
+			data := strings.NewReader("file content")
+
+			err := svc.saveFileData(ctx, ownerID, data, fileName)
+
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("saveFileData() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if tt.wantErr && tt.errContains != "" {
+				if err.Error() != tt.errContains {
+					t.Fatalf("saveFileData() error = %q, want %q", err.Error(), tt.errContains)
+				}
+			}
+		})
+	}
 }
