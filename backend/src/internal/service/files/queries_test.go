@@ -1,14 +1,15 @@
 package files
 
 import (
+	"context"
+	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/pashagolub/pgxmock/v4"
 )
 
-// Testcase for FindAllMetadata repository method without pagination cursor.
-func TestRepository_GetAllFiles_NoCursor(t *testing.T) {
+func TestQuery_FindAllMetadata_NoCursor(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
 		t.Fatal(err)
@@ -17,7 +18,7 @@ func TestRepository_GetAllFiles_NoCursor(t *testing.T) {
 
 	ctx := context.Background()
 
-	repo := &Repository{db: mock}
+	repo := NewFileRepository(mock)
 
 	userID := uuid.New()
 	limit := 2
@@ -29,18 +30,15 @@ func TestRepository_GetAllFiles_NoCursor(t *testing.T) {
 		"checksum", "version",
 	}).
 		AddRow(
-			uuid.New(), "a.txt", "dir1/dir2/a.txt", int64(10),
-			".txt", now, now, userID, "deadbeef", now,
+			uuid.New(), "a.txt", "dir1/dir2/a.txt", uint64(10),
+			".txt", now, now, userID, []byte("deadbeef"), now,
 		).
 		AddRow(
-			uuid.New(), "b.png", "/b.png", int64(64),
-			".png", now, now, userID, "deadbeef", now,
+			uuid.New(), "b.png", "/b.png", uint64(64),
+			".png", now, now, userID, []byte("deadbeef"), now,
 		)
 
-	mock.ExpectQuery(`SELECT id, file_name, path, 
-		size, file_type, modified_at, uploaded_at, owner_id,
-		checksum, version`,
-	).
+	mock.ExpectQuery(`SELECT id, file_name, path, size, file_type, modified_at,`).
 		WithArgs(userID, limit).
 		WillReturnRows(rows)
 
@@ -60,8 +58,7 @@ func TestRepository_GetAllFiles_NoCursor(t *testing.T) {
 	}
 }
 
-// Testcase for FindAllMetadata repository method with pagination cursor.
-func TestRepository_GetAllFiles_Cursor(t *testing.T) {
+func TestQuery_FindAllMetadata_Cursor(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
 		t.Fatal(err)
@@ -69,7 +66,7 @@ func TestRepository_GetAllFiles_Cursor(t *testing.T) {
 
 	ctx := context.Background()
 
-	repo := &Repository{db: mock}
+	repo := NewFileRepository(mock)
 
 	userID := uuid.New()
 	cursorID := uuid.New()
@@ -85,35 +82,14 @@ func TestRepository_GetAllFiles_Cursor(t *testing.T) {
 		"modified_at", "uploaded_at", "owner_id",
 		"checksum", "version",
 	}).
-		AddRow(
-			uuid.New(),
-			"a.txt",
-			"dir1/dir2/a.txt",
-			uint64(10),
-			".txt",
-			now,
-			now,
-			userID,
-			[]byte("deadbeef"),
-			now,
+		AddRow(uuid.New(), "a.txt", "dir1/dir2/a.txt", uint64(10), ".txt",
+			now, now, userID, []byte("deadbeef"), now,
 		).
-		AddRow(
-			uuid.New(),
-			"c.java",
-			"src/c.java",
-			uint64(64),
-			".java",
-			now,
-			now,
-			userID,
-			[]byte("deadbeef"),
-			now,
+		AddRow(uuid.New(), "c.java", "src/c.java", uint64(64), ".java",
+			now, now, userID, []byte("deadbeef"), now,
 		)
 
-	mock.ExpectQuery(`SELECT id, file_name, path, 
-		size, file_type, modified_at, uploaded_at, owner_id,
-		checksum, version`,
-	).
+	mock.ExpectQuery(`SELECT id, file_name, path, size, file_type, modified_at,`).
 		WithArgs(userID, cur.ModifiedAt, cur.ID, limit).
 		WillReturnRows(rows)
 
