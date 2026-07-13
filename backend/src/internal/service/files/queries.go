@@ -82,7 +82,7 @@ func (db *FileRepository) CheckExists(ctx context.Context, ID uuid.UUID) (bool, 
 	const sql = `SELECT id FROM metadata WHERE id = ($1)`
 	status, err := db.Pool.Exec(ctx, sql, ID)
 	if err != nil {
-		slog.Error("failed existence check", "error", "status:", status, err)
+		slog.Error("failed existence check", "error", err, "status", status)
 		return false, err
 	}
 	return true, nil
