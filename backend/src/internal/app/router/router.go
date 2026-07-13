@@ -19,7 +19,7 @@ var (
 func RegisterFileRoutes(mux *http.ServeMux, a *auth.Authenticator, db *database.MetadataDatabase) error {
 	bucketUrl := "test-bucket"
 
-	client, err := platform.NewBlobStorageClient(context.Background(), "test-bucket")
+	client, err := platform.NewBlobStorageClient(context.Background(), "s3://temp-buck")
 	if err != nil {
 		panic(err)
 	}
