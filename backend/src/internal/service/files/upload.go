@@ -146,8 +146,8 @@ func (svc *UploadService) execute(r *http.Request) error {
 				Permissions:  decodedRequest.Permissions,
 			}
 
-		case strings.HasPrefix(name, "file-"):
-			idToStr := strings.TrimPrefix(name, "file-")
+		case strings.HasPrefix(name, "filedata-"):
+			idToStr := strings.TrimPrefix(name, "filedata-")
 
 			data, err := io.ReadAll(part)
 			if err != nil {
