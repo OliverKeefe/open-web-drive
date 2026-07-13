@@ -1,16 +1,29 @@
 package files
 
 import (
-	"backend/src/internal/platform"
+	"backend/src/internal/auth"
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/pashagolub/pgxmock/v4"
-	"gocloud.dev/blob/memblob"
+	"gocloud.dev/blob"
 )
 
 type mockBlobStorageClient struct {
 	UploadFunc func(ctx context.Context, bucket string, key string, data []byte) error
+type mockBlobStorage struct {
+	multipartUploadFunc func(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error
+}
+
 }
 
 var (
@@ -30,32 +43,34 @@ var (
 	}
 )
 
-func TestNewUploadService(t *testing.T) {
+func Test_NewUploadService(t *testing.T) {
 	mockPool, err := pgxmock.NewPool()
 	if err != nil {
-		t.Errorf("unable to mock db, %v", err)
+		t.Fatalf("unable to mock db, %v", err)
 	}
 	defer mockPool.Close()
 
-	memBucket := memblob.OpenBucket(nil)
-	defer memBucket.Close()
+	blobClient := &mockBlobStorage{}
+	repo := FileRepository{Pool: mockPool}
 
-	mockBlobStorageClient := platform.NewBlobStorageClient(memBucket)
-	var mockDb = DB{
-		pool: mockPool,
+	got := NewUploadService(&repo, blobClient, "test-bucket")
+
+	if got == nil {
+		t.Fatal("NewUploadService returned nil")
 	}
 
-	want := UploadService{
-		Db:                mockDb,
-		BlobStorageClient: mockBlobStorageClient,
-		bucket:            "test-bucket",
+	if got.BucketURL != "test-bucket" {
+		t.Errorf("UploadService.BucketURL = %q; want %q", got.BucketURL, "test-bucket")
 	}
 
-	got := NewUploadService(mockDb, mockBlobStorageClient, "test-bucket")
-
-	if got.bucket != want.bucket {
-		t.Errorf("UploadService.bucket = %q; want %q", got.bucket, "test-bucket")
+	if got.BlobStorageClient != blobClient {
+		t.Errorf("UploadService.BlobStorageClient was not set correctly")
 	}
+
+	if got.Db != &repo {
+		t.Errorf("UploadService.Db was not set correctly")
+	}
+}
 
 	if got.BlobStorageClient != want.BlobStorageClient {
 		t.Errorf("UploadService.BlobStorageClient was not initialized correctly")
