@@ -1,8 +1,8 @@
 package files
 
 import (
-	"backend/src/internal/api/message"
-	"backend/src/internal/platform"
+	"backend/internal/api/message"
+	"backend/internal/platform"
 	"context"
 	"log"
 	"net/http"
@@ -81,16 +81,17 @@ func (svc *SearchService) execute(ctx context.Context, request GetAllMetadataReq
 }
 
 func (svc *SearchService) findMetadata(ctx context.Context, request FindMetadataRequest) ([]MetaData, error) {
-	var (
-		files []MetaData
-	)
-
-	model := request.ToModel()
-	files, err := svc.db.FindMetadata(ctx, model)
-	if err != nil {
-		log.Printf("unable to get file metadata: %v", err)
-		return files, err
-	}
-
-	return files, nil
+	//var (
+	//	files []MetaData
+	//)
+	//
+	//model := request.ToModel()
+	//files, err := svc.Db.FindMetadata(ctx, model)
+	//if err != nil {
+	//	log.Printf("unable to get file metadata: %v", err)
+	//	return files, err
+	//}
+	//
+	//return files, nil
+	panic("not implemented")
 }

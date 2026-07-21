@@ -1,7 +1,7 @@
 package files
 
 import (
-	"backend/src/internal/auth"
+	"backend/internal/auth"
 	"bytes"
 	"context"
 	"encoding/json"

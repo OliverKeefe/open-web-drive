@@ -1,9 +1,9 @@
 package files
 
 import (
-	"backend/src/internal/api/message"
-	"backend/src/internal/auth"
-	"backend/src/internal/platform"
+	"backend/internal/api/message"
+	"backend/internal/auth"
+	"backend/internal/platform"
 	"context"
 	"errors"
 	"fmt"

@@ -1,10 +1,10 @@
 package app
 
 import (
-	"backend/src/internal/app/router"
-	"backend/src/internal/auth"
-	"backend/src/internal/database"
-	"backend/src/internal/middleware"
+	"backend/internal/app/router"
+	"backend/internal/auth"
+	"backend/internal/database"
+	"backend/internal/middleware"
 	"context"
 	"fmt"
 	"log"

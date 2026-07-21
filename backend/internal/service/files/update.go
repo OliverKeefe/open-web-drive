@@ -1,7 +1,7 @@
 package files
 
 import (
-	"backend/src/internal/platform"
+	"backend/internal/platform"
 	"context"
 	"net/http"
 

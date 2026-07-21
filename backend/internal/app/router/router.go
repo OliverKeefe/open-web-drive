@@ -1,11 +1,11 @@
 package router
 
 import (
-	"backend/src/internal/auth"
-	"backend/src/internal/database"
-	"backend/src/internal/middleware"
-	"backend/src/internal/platform"
-	"backend/src/internal/service/files"
+	"backend/internal/auth"
+	"backend/internal/database"
+	"backend/internal/middleware"
+	"backend/internal/platform"
+	files2 "backend/internal/service/files"
 	"context"
 	"net/http"
 )
@@ -24,12 +24,12 @@ func RegisterFileRoutes(mux *http.ServeMux, a *auth.Authenticator, db *database.
 		panic(err)
 	}
 
-	repository := files.NewFileRepository(db.Pool)
+	repository := files2.NewFileRepository(db.Pool)
 
-	uploadSvc := files.NewUploadService(repository, client, bucketUrl)
-	downloadSvc := files.NewDownloadService(repository, client, bucketUrl)
-	deleteSvc := files.NewDeleteService(repository, client, bucketUrl)
-	updateSvc := files.NewUpdateMetadataService(repository, client, bucketUrl)
+	uploadSvc := files2.NewUploadService(repository, client, bucketUrl)
+	downloadSvc := files2.NewDownloadService(repository, client, bucketUrl)
+	deleteSvc := files2.NewDeleteService(repository, client, bucketUrl)
+	updateSvc := files2.NewUpdateMetadataService(repository, client, bucketUrl)
 
 	uploadEndpoint := route(a, uploadSvc.Handle)
 	mux.Handle(

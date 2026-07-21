@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend/src/internal/app"
+	"backend/internal/app"
 	"log"
 )
 

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"backend/src/internal/auth"
+	"backend/internal/auth"
 	"net/http"
 	"strings"
 )

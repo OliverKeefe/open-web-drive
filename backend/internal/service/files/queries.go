@@ -1,7 +1,7 @@
 package files
 
 import (
-	query "backend/src/internal/api/query"
+	"backend/internal/api/query"
 	"context"
 	"errors"
 	"fmt"

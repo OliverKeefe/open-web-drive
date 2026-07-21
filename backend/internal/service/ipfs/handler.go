@@ -1,8 +1,8 @@
 package ipfs
 
 import (
-	"backend/src/internal/ipfs"
-	"backend/src/internal/service/files"
+	"backend/internal/ipfs"
+	"backend/internal/service/files"
 	"context"
 )
 

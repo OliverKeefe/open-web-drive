@@ -1,8 +1,8 @@
 package files
 
 import (
-	"backend/src/internal/api/message"
-	"backend/src/internal/auth"
+	"backend/internal/api/message"
+	"backend/internal/auth"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -208,3 +208,31 @@ func (svc *UploadService) saveMetadata(ctx context.Context, metadata FileMetadat
 
 	return nil
 }
+
+//func (svc *UploadService) SaveToS3(ctx context.Context, basePath string, rdr io.Reader, filename string) error {
+//	ownerID, ok := auth.UserIDFromCtx(ctx)
+//	if !ok {
+//		return errors.New("unable to get ownerID from context")
+//	}
+//
+//	key := fmt.Sprintf("%s/%s", ownerID, filename)
+//
+//	var partMiBs int64 = 10
+//
+//	uploader := transfermanager.New(repo.s3Client, func(o *transfermanager.Options) {
+//		o.PartSizeBytes = partMiBs * 1024 * 1024
+//		o.Concurrency = 3
+//	})
+//
+//	_, err := uploader.UploadObject(ctx, &transfermanager.UploadObjectInput{
+//		Bucket: aws.String(repo.bucket),
+//		Key:    aws.String(key),
+//		Body:   rdr,
+//	})
+//	if err != nil {
+//		log.Printf("S3 transfer manager put error: %v", err)
+//		return err
+//	}
+//
+//	return nil
+//}

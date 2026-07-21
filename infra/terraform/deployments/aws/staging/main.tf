@@ -35,3 +35,8 @@ module "minio_storage" {
   environment = "staging"
 }
 
+resource "aws_instance" "aws_instance_name" {
+  tags = {
+    Name = aws_instance_name
+  }
+}
