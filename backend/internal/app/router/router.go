@@ -48,7 +48,7 @@ func RegisterFileRoutes(mux *http.ServeMux, a *auth.Authenticator, db *database.
 	)
 	updateMetadataRoute := route(a, updateSvc.Handle)
 	mux.Handle(
-		"POST /api/files/delete",
+		"PUT /api/files/metadata",
 		updateMetadataRoute,
 	)
 
