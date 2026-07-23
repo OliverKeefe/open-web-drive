@@ -1,13 +1,15 @@
 export type Metadata = {
-    uuid:        string;
-    file_name:   string;
-    path:        string;
-    size:        number;
-    file_type:   string;
-    modified_at: string;
-    uploaded_at: string;
-    owner_id:    string;
-    //access_to:   string[];
-    //group_id:    string[];
-    version:     string;
+    id:            string;
+    file_id:       string;
+    version:       number;
+    owner_id:      string;
+    file_name:     string;
+    path:          string;
+    relative_path: string;
+    size:          number;
+    file_type:     string;
+    hash:          string;
+    created_at:    string;
+    modified_at:   string;
+    uploaded_at:   string;
 };
