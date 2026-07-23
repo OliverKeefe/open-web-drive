@@ -212,3 +212,43 @@ func (db *FileRepository) DeleteMetadata(ctx context.Context, id uuid.UUID, owne
 
 	return nil
 }
+
+// DeleteFileData deletes the blob from storage and removes the files row if no
+// metadata versions remain.
+func (db *FileRepository) DeleteFileData(ctx context.Context, id uuid.UUID, ownerID uuid.UUID) error {
+	// Query the metadata row to get the blob key components.
+	var (
+		fileID   uuid.UUID
+		fileName string
+	)
+	const lookup = `SELECT file_id, file_name FROM file_metadata WHERE id = $1 AND owner_id = $2;`
+	err := db.Pool.QueryRow(ctx, lookup, id, ownerID).Scan(&fileID, &fileName)
+	if err == pgx.ErrNoRows {
+		return errors.New("no record found")
+	}
+	if err != nil {
+		return fmt.Errorf("could not look up file metadata: %w", err)
+	}
+
+	// Delete all metadata versions for this file.
+	const delMeta = `DELETE FROM file_metadata WHERE file_id = $1;`
+	if _, err := db.Pool.Exec(ctx, delMeta, fileID); err != nil {
+		return fmt.Errorf("could not delete file metadata: %w", err)
+	}
+
+	// Delete the file identity row.
+	const delFile = `DELETE FROM files WHERE id = $1;`
+	status, err := db.Pool.Exec(ctx, delFile, fileID)
+	if err != nil {
+		return fmt.Errorf("could not delete file: %w", err)
+	}
+	if status.RowsAffected() == 0 {
+		return errors.New("no file record found")
+	}
+
+	return nil
+}
+
+func (db *FileRepository) MarkForDeletion(ctx context.Context, id uuid.UUID, ownerID uuid.UUID) error {
+	panic("not implemented")
+}
