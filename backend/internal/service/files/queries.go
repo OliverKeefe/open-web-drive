@@ -1,11 +1,9 @@
 package files
 
 import (
-	"backend/internal/api/query"
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/google/uuid"
@@ -28,108 +26,87 @@ func NewFileRepository(pool Pool) *FileRepository {
 	return &FileRepository{Pool: pool}
 }
 
-func FindMetadata(m MetaData) (string, []any) {
-	const baseQuery = `SELECT id, file_name, path, size, file_type, modified_at, 
-       	uploaded_at, version, checksum, owner_id 
-		FROM file_metadata
-	`
+// PersistFile inserts a new row into the files table (stable file identity).
+func (db *FileRepository) PersistFile(ctx context.Context, fileID uuid.UUID) error {
+	const q = `INSERT INTO files (id, created_at) VALUES ($1, now());`
+	_, err := db.Pool.Exec(ctx, q, fileID)
+	return err
+}
 
-	var b query.Builder
+// GetNextVersion returns the next version number for a given file_id.
+func (db *FileRepository) GetNextVersion(ctx context.Context, fileID uuid.UUID) (int, error) {
+	const q = `SELECT COALESCE(MAX(version), 0) + 1 FROM file_metadata WHERE file_id = $1;`
+	var next int
+	err := db.Pool.QueryRow(ctx, q, fileID).Scan(&next)
+	return next, err
+}
 
-	b.Equal("id", m.ID)
-	b.Equal("file_name", m.FileName)
-	b.Equal("path", m.Path)
-	b.Equal("size", m.Size)
-	b.Equal("file_type", m.FileType)
-	b.Equal("modified_at", m.ModifiedAt)
-	b.Equal("uploaded_at", m.UploadedAt)
-	b.Equal("owner_id", m.Owner)
-	b.Equal("version", m.Version)
-	if len(m.Group) > 0 {
-		const selectGroups = `
-			EXISTS (
-				SELECT * FROM file_metadata_group_access fga 
-				WHERE fga.file_id = file_metadata.id
-					AND fga.user_id = ANY (?) 
-			)`
-		b.Raw(selectGroups, m.Group)
+// UpsertUser inserts a user if they don't already exist.
+// TODO: extract preferred_username from JWT claims when auth layer supports it.
+func (db *FileRepository) UpsertUser(ctx context.Context, userID uuid.UUID, name string) error {
+	const q = `INSERT INTO users (id, name) VALUES ($1, $2)
+		ON CONFLICT (id) DO NOTHING;`
+	_, err := db.Pool.Exec(ctx, q, userID, name)
+	return err
+}
+
+// FileExists checks if a files row exists for the given file ID.
+func (db *FileRepository) FileExists(ctx context.Context, fileID uuid.UUID) (bool, error) {
+	const q = `SELECT id FROM files WHERE id = $1;`
+	var id uuid.UUID
+	err := db.Pool.QueryRow(ctx, q, fileID).Scan(&id)
+	if err == pgx.ErrNoRows {
+		return false, nil
 	}
-	if len(m.AccessTo) > 0 {
-		const accessTo = `
-			EXISTS (
-				SELECT * FROM file_user_access fua
-				WHERE fua.file_id = file_medata.id
-					AND fua.user_id = ANY (?)
-			)`
-		b.Raw(accessTo, m.AccessTo)
-	}
-
-	sql := fmt.Sprintf("%s WHERE %s", baseQuery, strings.Join(b.Clauses, " AND "))
-	args := b.Args
-
-	return sql, args
-}
-
-func (db *FileRepository) Persist() {
-	panic("not implemented")
-}
-
-func (db *FileRepository) FindMetadataByID(ctx context.Context, ID uuid.UUID) (Metadata, error) {
-	panic("not implemented")
-}
-
-func (db *FileRepository) CheckExists(ctx context.Context, ID uuid.UUID) (bool, error) {
-	const sql = `SELECT id FROM metadata WHERE id = ($1)`
-	status, err := db.Pool.Exec(ctx, sql, ID)
 	if err != nil {
-		slog.Error("failed existence check", "error", err, "status", status)
 		return false, err
 	}
 	return true, nil
 }
 
+// CheckExists checks if a metadata row already exists for the given (file_id, version).
+func (db *FileRepository) CheckExists(ctx context.Context, fileID uuid.UUID, version int) (bool, error) {
+	const q = `SELECT id FROM file_metadata WHERE file_id = $1 AND version = $2;`
+	var id uuid.UUID
+	err := db.Pool.QueryRow(ctx, q, fileID, version).Scan(&id)
+	if err == pgx.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// PersistMetadata inserts a new file_metadata row with all versioned attributes.
 func (db *FileRepository) PersistMetadata(ctx context.Context, metadata FileMetadata) error {
-	const q = `INSERT INTO file_metadata (id, file_name, path, size, file_type, 
-                           modified_at, uploaded_at, version, checksum, owner_id) 
-				   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
+	const q = `INSERT INTO file_metadata
+		(id, file_id, version, owner_id, file_name, path, relative_path,
+		 size, file_type, hash, modified_at, uploaded_at, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);`
 
 	_, err := db.Pool.Exec(
 		ctx,
 		q,
 		metadata.ID,
+		metadata.FileID,
+		metadata.Version,
 		metadata.OwnerID,
 		metadata.FileName,
 		metadata.Path,
 		metadata.RelativePath,
 		metadata.Size,
 		metadata.FileType,
+		metadata.Hash,
 		metadata.ModifiedAt,
 		metadata.UploadedAt,
 		metadata.CreatedAt,
-		metadata.Version,
-		metadata.Hash,
-		metadata.Permissions,
 	)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-func (db *FileRepository) DeleteFileData(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error {
-	panic("not implemented")
-}
-
-func (db *FileRepository) MarkForDeletion(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error {
-	panic("not implemented")
-	// Should add flag to relation in metadata to delete x days (depending on user policy
-	// default = 30d), then need cleaner func to bulk cleanse metadata db and before this,
-	// remove file data from both virtual disc and IPFS node.
-}
-
-func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadataRequest) ([]MetaData, error) {
-
+// FindAllMetadata returns all file_metadata rows for a user, with cursor-based pagination.
+func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadataRequest) ([]FileMetadata, error) {
 	var (
 		rows pgx.Rows
 		err  error
@@ -137,18 +114,17 @@ func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadat
 
 	if req.Cursor == nil || req.Cursor.ID == uuid.Nil || req.Cursor.ModifiedAt.IsZero() {
 		rows, err = db.Pool.Query(ctx, `
-			SELECT id, file_name, path, size, file_type, modified_at,
-				uploaded_at, owner_id, checksum, version 
+			SELECT id, file_id, file_name, path, relative_path, size, file_type,
+				owner_id, version, hash, created_at, modified_at, uploaded_at
 			FROM file_metadata
 			WHERE owner_id = $1
 			ORDER BY modified_at DESC, id DESC
 			LIMIT $2;
 		`, req.UserID, req.Limit)
-
 	} else {
 		rows, err = db.Pool.Query(ctx, `
-			SELECT id, file_name, path, size, file_type, modified_at,
-				uploaded_at, owner_id, checksum, version
+			SELECT id, file_id, file_name, path, relative_path, size, file_type,
+				owner_id, version, hash, created_at, modified_at, uploaded_at
 			FROM file_metadata
 			WHERE owner_id = $1
 				AND (modified_at, id) < ($2, $3)
@@ -161,27 +137,27 @@ func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadat
 	}
 	defer rows.Close()
 
-	result := make([]MetaData, 0, req.Limit)
+	result := make([]FileMetadata, 0, req.Limit)
 
 	for rows.Next() {
-		var model MetaData
+		var model FileMetadata
 		if err := rows.Scan(
 			&model.ID,
+			&model.FileID,
 			&model.FileName,
 			&model.Path,
+			&model.RelativePath,
 			&model.Size,
 			&model.FileType,
+			&model.OwnerID,
+			&model.Version,
+			&model.Hash,
+			&model.CreatedAt,
 			&model.ModifiedAt,
 			&model.UploadedAt,
-			&model.Owner,
-			//&model.AccessTo,
-			//&model.Group,
-			&model.CheckSum,
-			&model.Version,
 		); err != nil {
 			return nil, err
 		}
-
 		result = append(result, model)
 	}
 
@@ -189,6 +165,98 @@ func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadat
 		return nil, err
 	}
 
+	return result, nil
+}
+
+// FindMetadata builds a dynamic query for filtering file_metadata rows.
+// Only non-zero fields in m are used as WHERE conditions.
+func (db *FileRepository) FindMetadata(ctx context.Context, m FileMetadata) ([]FileMetadata, error) {
+	const baseQuery = `SELECT id, file_id, file_name, path, relative_path, size, file_type,
+		owner_id, version, hash, created_at, modified_at, uploaded_at
+	FROM file_metadata`
+
+	var (
+		clauses []string
+		args    []any
+		argN    int
+	)
+
+	addClause := func(col string, val any) {
+		argN++
+		clauses = append(clauses, fmt.Sprintf("%s = $%d", col, argN))
+		args = append(args, val)
+	}
+
+	if m.ID != uuid.Nil {
+		addClause("id", m.ID)
+	}
+	if m.FileID != uuid.Nil {
+		addClause("file_id", m.FileID)
+	}
+	if m.FileName != "" {
+		addClause("file_name", m.FileName)
+	}
+	if m.Path != "" {
+		addClause("path", m.Path)
+	}
+	if m.Size != 0 {
+		addClause("size", m.Size)
+	}
+	if m.FileType != "" {
+		addClause("file_type", m.FileType)
+	}
+	if !m.ModifiedAt.IsZero() {
+		addClause("modified_at", m.ModifiedAt)
+	}
+	if !m.UploadedAt.IsZero() {
+		addClause("uploaded_at", m.UploadedAt)
+	}
+	if m.OwnerID != uuid.Nil {
+		addClause("owner_id", m.OwnerID)
+	}
+	if m.Version != 0 {
+		addClause("version", m.Version)
+	}
+	if m.Hash != "" {
+		addClause("hash", m.Hash)
+	}
+
+	query := baseQuery
+	if len(clauses) > 0 {
+		query = fmt.Sprintf("%s WHERE %s", baseQuery, strings.Join(clauses, " AND "))
+	}
+
+	rows, err := db.Pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query file_metadata: %w", err)
+	}
+	defer rows.Close()
+
+	var result []FileMetadata
+	for rows.Next() {
+		var model FileMetadata
+		if err := rows.Scan(
+			&model.ID,
+			&model.FileID,
+			&model.FileName,
+			&model.Path,
+			&model.RelativePath,
+			&model.Size,
+			&model.FileType,
+			&model.OwnerID,
+			&model.Version,
+			&model.Hash,
+			&model.CreatedAt,
+			&model.ModifiedAt,
+			&model.UploadedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan file_metadata: %w", err)
+		}
+		result = append(result, model)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
