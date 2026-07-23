@@ -1,9 +1,7 @@
 import './App.css'
-import { useEffect, useState } from "react";
 import { ThemeProvider } from "@/components/theme-provider"
-import Layout from '@/app/features/shared/components/layout/layout';
-import { BrowserRouter } from 'react-router-dom';
-import AppRoutes from '@/routes/app-routes';
+import { RouterProvider } from "@tanstack/react-router";
+import { router } from "@/routes/app-routes";
 
 interface AppProps {
     isAuthenticated: boolean;
@@ -12,11 +10,7 @@ interface AppProps {
 function App({ isAuthenticated }: AppProps) {
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            <BrowserRouter>
-                <Layout>
-                    <AppRoutes />
-                </Layout>
-            </BrowserRouter>
+            <RouterProvider router={router} />
         </ThemeProvider>
     );
 }
