@@ -5,6 +5,7 @@ import (
 	"backend/internal/platform"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -49,7 +50,7 @@ func (svc *ScheduleDeleteService) execute(ctx context.Context, request DeleteReq
 
 	ownerID, err := uuid.Parse(userID)
 	if err != nil {
-		log.Printf("unable to parse userID string to uuid")
+		return fmt.Errorf("unable to parse userID string to uuid: %w", err)
 	}
 
 	err = svc.db.MarkForDeletion(ctx, request.ID, ownerID)
