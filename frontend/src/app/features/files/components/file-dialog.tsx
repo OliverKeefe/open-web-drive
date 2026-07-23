@@ -40,7 +40,7 @@ export function FileDialog({
                         ? formatDate(metadata.uploaded_at)
                         : "11/02/2026 11:38:42"}
                 </h2>
-                <h2>{metadata.uuid}</h2>
+                <h2>{metadata.id}</h2>
                 <h2>{metadata.owner_id}</h2>
 
                 <h2>Backup</h2>
