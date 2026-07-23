@@ -40,7 +40,7 @@ export class UploadForm {
             )
 
             this.formData.append(
-                `file-${metadata.id}`,
+                `filedata-${metadata.id}`,
                 file,
                 file.name
             )
