@@ -38,7 +38,7 @@ export function FileTable() {
     async function refreshFiles() {
         if (!userId || !request.user_id) return;
         const resp = await getAllMetadata(request);
-        setFiles(resp.metadata);
+        setFiles(resp.data);
     }
 
     useEffect(() => {
@@ -66,7 +66,7 @@ export function FileTable() {
      * Handles the selection of all file checkboxes within the file table.
      * */
     const selectAll = (checked: boolean) => {
-        setSelected(checked ? files.map((f) => f.uuid) : [])
+        setSelected(checked ? files.map((f) => f.id) : [])
     }
 
     /**
@@ -112,11 +112,11 @@ export function FileTable() {
 
                 <TableBody>
                     {files.map((file) => (
-                        <TableRow key={file.uuid} className="cursor-pointer">
+                        <TableRow key={file.id} className="cursor-pointer">
                             <TableCell>
                                 <Checkbox
-                                    checked={selected.includes(file.uuid)}
-                                    onCheckedChange={() => toggleSelect(file.uuid)}
+                                    checked={selected.includes(file.id)}
+                                    onCheckedChange={() => toggleSelect(file.id)}
                                 />
                             </TableCell>
 
@@ -136,7 +136,7 @@ export function FileTable() {
 
                             <TableCell>
                                 <FileDropdown
-                                    fileId={file.uuid}
+                                    fileId={file.id}
                                     onDeleted={handleFileDeleted}
                                 />
                             </TableCell>
