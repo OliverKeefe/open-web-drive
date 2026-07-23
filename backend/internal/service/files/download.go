@@ -11,7 +11,7 @@ import (
 )
 
 type downloadRepository interface {
-	CheckExists(ctx context.Context, ID uuid.UUID) (bool, error)
+	FindMetadataByID(ctx context.Context, id uuid.UUID) (FileMetadata, error)
 }
 
 type downloadBlob interface {
