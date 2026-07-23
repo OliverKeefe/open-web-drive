@@ -8,6 +8,7 @@ import (
 	files2 "backend/internal/service/files"
 	"context"
 	"net/http"
+	"os"
 )
 
 var (
@@ -17,19 +18,23 @@ var (
 )
 
 func RegisterFileRoutes(mux *http.ServeMux, a *auth.Authenticator, db *database.MetadataDatabase) error {
-	bucketUrl := "test-bucket"
+	bucketURL := os.Getenv("BLOB_BUCKET_URL")
+	if bucketURL == "" {
+		bucketURL = "s3://temp-buck"
+	}
 
-	client, err := platform.NewBlobStorageClient(context.Background(), "s3://temp-buck")
+	client, err := platform.NewBlobStorageClient(context.Background(), bucketURL)
 	if err != nil {
 		panic(err)
 	}
 
 	repository := files2.NewFileRepository(db.Pool)
 
-	uploadSvc := files2.NewUploadService(repository, client, bucketUrl)
-	downloadSvc := files2.NewDownloadService(repository, client, bucketUrl)
-	deleteSvc := files2.NewDeleteService(repository, client, bucketUrl)
-	updateSvc := files2.NewUpdateMetadataService(repository, client, bucketUrl)
+	uploadSvc := files2.NewUploadService(repository, client, bucketURL)
+	downloadSvc := files2.NewDownloadService(repository, client, bucketURL)
+	deleteSvc := files2.NewDeleteService(repository, client, bucketURL)
+	updateSvc := files2.NewUpdateMetadataService(repository, client, bucketURL)
+	searchSvc := files2.NewSearchService(repository, client, bucketURL)
 
 	uploadEndpoint := route(a, uploadSvc.Handle)
 	mux.Handle(
