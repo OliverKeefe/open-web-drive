@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import {Flame, FolderClosed, GitBranch, Settings2, Snowflake, SquareTerminal, Users} from "lucide-react"
 import React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {Link} from "react-router-dom";
+import {Link} from "@tanstack/react-router";
 
 interface SecondarySidebarProps {
     children?: React.ReactNode
