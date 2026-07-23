@@ -30,13 +30,17 @@ func (m *mockBlobStorage) MultipartUpload(ctx context.Context, key string, dataS
 }
 
 type mockUploadRepository struct {
-	checkExistsFunc     func(ctx context.Context, ID uuid.UUID) (bool, error)
+	checkExistsFunc     func(ctx context.Context, fileID uuid.UUID, version int) (bool, error)
 	persistMetadataFunc func(ctx context.Context, metadata FileMetadata) error
+	persistFileFunc     func(ctx context.Context, fileID uuid.UUID) error
+	getNextVersionFunc  func(ctx context.Context, fileID uuid.UUID) (int, error)
+	fileExistsFunc      func(ctx context.Context, fileID uuid.UUID) (bool, error)
+	upsertUserFunc      func(ctx context.Context, userID uuid.UUID, name string) error
 }
 
-func (m *mockUploadRepository) CheckExists(ctx context.Context, ID uuid.UUID) (bool, error) {
+func (m *mockUploadRepository) CheckExists(ctx context.Context, fileID uuid.UUID, version int) (bool, error) {
 	if m.checkExistsFunc != nil {
-		return m.checkExistsFunc(ctx, ID)
+		return m.checkExistsFunc(ctx, fileID, version)
 	}
 	return false, nil
 }
@@ -44,6 +48,34 @@ func (m *mockUploadRepository) CheckExists(ctx context.Context, ID uuid.UUID) (b
 func (m *mockUploadRepository) PersistMetadata(ctx context.Context, metadata FileMetadata) error {
 	if m.persistMetadataFunc != nil {
 		return m.persistMetadataFunc(ctx, metadata)
+	}
+	return nil
+}
+
+func (m *mockUploadRepository) PersistFile(ctx context.Context, fileID uuid.UUID) error {
+	if m.persistFileFunc != nil {
+		return m.persistFileFunc(ctx, fileID)
+	}
+	return nil
+}
+
+func (m *mockUploadRepository) GetNextVersion(ctx context.Context, fileID uuid.UUID) (int, error) {
+	if m.getNextVersionFunc != nil {
+		return m.getNextVersionFunc(ctx, fileID)
+	}
+	return 1, nil
+}
+
+func (m *mockUploadRepository) FileExists(ctx context.Context, fileID uuid.UUID) (bool, error) {
+	if m.fileExistsFunc != nil {
+		return m.fileExistsFunc(ctx, fileID)
+	}
+	return false, nil
+}
+
+func (m *mockUploadRepository) UpsertUser(ctx context.Context, userID uuid.UUID, name string) error {
+	if m.upsertUserFunc != nil {
+		return m.upsertUserFunc(ctx, userID, name)
 	}
 	return nil
 }
@@ -58,10 +90,8 @@ var (
 		Size:             0,
 		FileType:         "",
 		ID:               "",
-		OwnerID:          "",
 		FileName:         "",
 		CreatedAt:        0,
-		Permissions:      nil,
 	}
 )
 
@@ -176,6 +206,8 @@ func TestUploadService_saveMetadata(t *testing.T) {
 	ctx := context.Background()
 	metadata := FileMetadata{
 		ID:       uuid.New(),
+		FileID:   uuid.New(),
+		Version:  1,
 		FileName: "test.txt",
 	}
 
@@ -188,9 +220,9 @@ func TestUploadService_saveMetadata(t *testing.T) {
 		{
 			name: "success",
 			repo: &mockUploadRepository{
-				checkExistsFunc: func(ctx context.Context, ID uuid.UUID) (bool, error) {
-					if ID != metadata.ID {
-						t.Errorf("CheckExists called with wrong ID: got %v, want %v", ID, metadata.ID)
+				checkExistsFunc: func(ctx context.Context, fileID uuid.UUID, version int) (bool, error) {
+					if fileID != metadata.FileID {
+						t.Errorf("CheckExists called with wrong fileID: got %v, want %v", fileID, metadata.FileID)
 					}
 					return false, nil
 				},
@@ -206,7 +238,7 @@ func TestUploadService_saveMetadata(t *testing.T) {
 		{
 			name: "check exists returns error",
 			repo: &mockUploadRepository{
-				checkExistsFunc: func(ctx context.Context, ID uuid.UUID) (bool, error) {
+				checkExistsFunc: func(ctx context.Context, fileID uuid.UUID, version int) (bool, error) {
 					return false, errors.New("db connection failed")
 				},
 			},
@@ -216,7 +248,7 @@ func TestUploadService_saveMetadata(t *testing.T) {
 		{
 			name: "metadata already exists",
 			repo: &mockUploadRepository{
-				checkExistsFunc: func(ctx context.Context, ID uuid.UUID) (bool, error) {
+				checkExistsFunc: func(ctx context.Context, fileID uuid.UUID, version int) (bool, error) {
 					return true, nil
 				},
 			},
@@ -226,7 +258,7 @@ func TestUploadService_saveMetadata(t *testing.T) {
 		{
 			name: "persist metadata returns error",
 			repo: &mockUploadRepository{
-				checkExistsFunc: func(ctx context.Context, ID uuid.UUID) (bool, error) {
+				checkExistsFunc: func(ctx context.Context, fileID uuid.UUID, version int) (bool, error) {
 					return false, nil
 				},
 				persistMetadataFunc: func(ctx context.Context, md FileMetadata) error {
