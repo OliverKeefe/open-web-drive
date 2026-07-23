@@ -6,12 +6,14 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -20,12 +22,21 @@ import (
 )
 
 type uploadRepository interface {
+	PersistFile(ctx context.Context, fileID uuid.UUID) error
 	PersistMetadata(ctx context.Context, metadata FileMetadata) error
-	CheckExists(ctx context.Context, ID uuid.UUID) (bool, error)
+	GetNextVersion(ctx context.Context, fileID uuid.UUID) (int, error)
+	FileExists(ctx context.Context, fileID uuid.UUID) (bool, error)
+	CheckExists(ctx context.Context, fileID uuid.UUID, version int) (bool, error)
+	UpsertUser(ctx context.Context, userID uuid.UUID, name string) error
 }
 
 type blobStorage interface {
 	MultipartUpload(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error
+}
+
+type pendingFile struct {
+	metadata   FileMetadata
+	fileExists bool
 }
 
 type UploadService struct {
@@ -43,50 +54,49 @@ func NewUploadService(db uploadRepository, client blobStorage, bucketUrl string)
 }
 
 func (svc *UploadService) Handle(w http.ResponseWriter, r *http.Request) {
-	userID, ok := auth.UserIDFromCtx(r.Context())
-	if !ok {
-		http.Error(w, "upload failed", http.StatusUnauthorized)
-		return
-	}
+	//userID, ok := auth.UserIDFromCtx(r.Context())
+	//if !ok {
+	//	http.Error(w, "upload failed", http.StatusUnauthorized)
+	//	return
+	//}
 
-	hasClaim, err := auth.HasClaim(r.Context(), uuid.MustParse(userID), "permissions:files:write")
-	if err != nil {
-		slog.Error("upload failed", "error", err)
-	}
-
-	if !hasClaim {
-		http.Error(w, "upload failed", http.StatusUnauthorized)
-		return
-	}
+	//hasClaim, err := auth.HasClaim(r.Context(), uuid.MustParse(userID), "")
+	//if err != nil {
+	//	slog.Error("upload failed", "error", err)
+	//}
+	//
+	//if !hasClaim {
+	//	http.Error(w, "upload failed", http.StatusUnauthorized)
+	//	return
+	//}
 
 	// FYI - 5<<20 is a bitshift operation (5*2^20 = 5,242,880 Bytes or 5 MegaBytes)
 	r.Body = http.MaxBytesReader(w, r.Body, 5<<20)
 	if err := svc.execute(r); err != nil {
 		slog.Error("upload failed", "error", err)
 		http.Error(w, "upload failed", http.StatusBadRequest)
+		return
 	}
 
 	if err := message.Response(w, "upload succeeded", nil); err != nil {
 		slog.Error("upload failed", "error", err)
 		return
 	}
-
 }
 
-// The raw metadata part of a multipart upload.
+// multipartMetadata is the raw metadata part of a multipart upload.
+// TODO: reformat json fields, currently match frontend but not consistent with Go idioms.
 type multipartMetadata struct {
-	Path             string            `json:"path"`
-	RelativePath     string            `json:"relativePath"`
-	LastModified     int64             `json:"lastModified"`
-	LastModifiedDate string            `json:"lastModifiedDate"`
-	UploadedAt       int64             `json:"uploadedAt"`
-	Size             uint64            `json:"size"`
-	FileType         string            `json:"fileType"`
-	ID               string            `json:"id"`
-	OwnerID          string            `json:"owner_id"`
-	FileName         string            `json:"file_name"`
-	CreatedAt        int64             `json:"created_at"`
-	Permissions      []FilePermissions `json:"file_permissions"`
+	Path             string `json:"path"`
+	RelativePath     string `json:"relativePath"`
+	LastModified     int64  `json:"lastModified"`
+	LastModifiedDate string `json:"lastModifiedDate"`
+	UploadedAt       int64  `json:"uploadedAt"`
+	Size             uint64 `json:"size"`
+	FileType         string `json:"fileType"`
+	ID               string `json:"id"`
+	FileName         string `json:"file_name"`
+	CreatedAt        int64  `json:"created_at"`
 }
 
 func (svc *UploadService) execute(r *http.Request) error {
@@ -97,11 +107,16 @@ func (svc *UploadService) execute(r *http.Request) error {
 
 	ctx := r.Context()
 
-	metadataByID := make(map[string]FileMetadata)
+	pendingByID := make(map[string]*pendingFile)
 
 	userID, ok := auth.UserIDFromCtx(ctx)
 	if !ok {
 		return errors.New("unable to get UserID from context")
+	}
+
+	parsedUserID := uuid.MustParse(userID)
+	if err := svc.Db.UpsertUser(ctx, parsedUserID, userID); err != nil {
+		return fmt.Errorf("failed to upsert user: %w", err)
 	}
 
 	for {
@@ -115,35 +130,49 @@ func (svc *UploadService) execute(r *http.Request) error {
 
 		name := part.FormName()
 
-		var (
-			decodedRequest multipartMetadata
-		)
-		if err := json.NewDecoder(part).Decode(&decodedRequest); err != nil {
-			return err
-		}
-
 		switch {
 		case strings.HasPrefix(name, "metadata-"):
-			idAsStr := strings.TrimPrefix(name, "metadata-")
-
-			versionID, err := uuid.NewV7()
-			if err != nil {
+			var decodedRequest multipartMetadata
+			if err := json.NewDecoder(part).Decode(&decodedRequest); err != nil {
 				return err
 			}
 
-			metadataByID[idAsStr] = FileMetadata{
-				ID:           uuid.MustParse(idAsStr),
-				OwnerID:      uuid.MustParse(userID),
-				FileName:     decodedRequest.FileName,
-				Path:         decodedRequest.Path,
-				RelativePath: decodedRequest.RelativePath,
-				Size:         decodedRequest.Size,
-				FileType:     decodedRequest.FileType,
-				ModifiedAt:   time.UnixMilli(decodedRequest.LastModified),
-				UploadedAt:   time.UnixMilli(decodedRequest.UploadedAt),
-				CreatedAt:    time.UnixMilli(decodedRequest.CreatedAt),
-				Version:      versionID,
-				Permissions:  decodedRequest.Permissions,
+			idAsStr := strings.TrimPrefix(name, "metadata-")
+			fileID := uuid.MustParse(idAsStr)
+
+			// Check if the file identity row already exists.
+			fileExists, err := svc.Db.FileExists(ctx, fileID)
+			if err != nil {
+				return fmt.Errorf("failed to check file existence: %w", err)
+			}
+
+			// Get the next version number.
+			nextVersion, err := svc.Db.GetNextVersion(ctx, fileID)
+			if err != nil {
+				return fmt.Errorf("failed to get next version: %w", err)
+			}
+
+			metaID, err := uuid.NewV7()
+			if err != nil {
+				return fmt.Errorf("failed to generate metadata id: %w", err)
+			}
+
+			pendingByID[idAsStr] = &pendingFile{
+				metadata: FileMetadata{
+					ID:           metaID,
+					FileID:       fileID,
+					Version:      nextVersion,
+					OwnerID:      uuid.MustParse(userID),
+					FileName:     decodedRequest.FileName,
+					Path:         decodedRequest.Path,
+					RelativePath: decodedRequest.RelativePath,
+					Size:         int64(decodedRequest.Size),
+					FileType:     path.Ext(decodedRequest.FileName),
+					ModifiedAt:   time.UnixMilli(decodedRequest.LastModified),
+					UploadedAt:   time.UnixMilli(decodedRequest.UploadedAt),
+					CreatedAt:    time.UnixMilli(decodedRequest.CreatedAt),
+				},
+				fileExists: fileExists,
 			}
 
 		case strings.HasPrefix(name, "filedata-"):
@@ -154,30 +183,38 @@ func (svc *UploadService) execute(r *http.Request) error {
 				return err
 			}
 
-			err = svc.saveFileData(
-				r.Context(),
-				uuid.MustParse(decodedRequest.OwnerID),
-				bytes.NewReader(data),
-				part.FileName(),
-			)
-			md := metadataByID[idToStr]
-			md.Hash = sha256.Sum256(data)
-			metadataByID[idToStr] = md
+			pf, ok := pendingByID[idToStr]
+			if !ok {
+				return fmt.Errorf("filedata part received before metadata part for %s", idToStr)
+			}
+
+			ownerID := uuid.MustParse(userID)
+			if err := svc.saveFileData(ctx, ownerID, bytes.NewReader(data), part.FileName()); err != nil {
+				return err
+			}
+
+			hash := sha256.Sum256(data)
+			pf.metadata.Hash = hex.EncodeToString(hash[:])
 		}
 	}
 
-	var newMetadata []FileMetadata
-
-	for _, md := range metadataByID {
-		if err := svc.saveMetadata(r.Context(), md); err != nil {
+	for _, pf := range pendingByID {
+		if err := svc.saveFile(ctx, pf); err != nil {
 			return err
 		}
-
-		newMetadata = append(newMetadata, md)
-
+		if err := svc.saveMetadata(ctx, pf.metadata); err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func (svc *UploadService) saveFile(ctx context.Context, pf *pendingFile) error {
+	if pf.fileExists {
+		return nil
+	}
+	return svc.Db.PersistFile(ctx, pf.metadata.FileID)
 }
 
 func (svc *UploadService) saveFileData(ctx context.Context, ownerID uuid.UUID, r io.Reader, fileName string) error {
@@ -189,11 +226,10 @@ func (svc *UploadService) saveFileData(ctx context.Context, ownerID uuid.UUID, r
 	}
 
 	return nil
-
 }
 
 func (svc *UploadService) saveMetadata(ctx context.Context, metadata FileMetadata) error {
-	exists, err := svc.Db.CheckExists(ctx, metadata.ID)
+	exists, err := svc.Db.CheckExists(ctx, metadata.FileID, metadata.Version)
 	if err != nil {
 		return err
 	}
@@ -208,31 +244,3 @@ func (svc *UploadService) saveMetadata(ctx context.Context, metadata FileMetadat
 
 	return nil
 }
-
-//func (svc *UploadService) SaveToS3(ctx context.Context, basePath string, rdr io.Reader, filename string) error {
-//	ownerID, ok := auth.UserIDFromCtx(ctx)
-//	if !ok {
-//		return errors.New("unable to get ownerID from context")
-//	}
-//
-//	key := fmt.Sprintf("%s/%s", ownerID, filename)
-//
-//	var partMiBs int64 = 10
-//
-//	uploader := transfermanager.New(repo.s3Client, func(o *transfermanager.Options) {
-//		o.PartSizeBytes = partMiBs * 1024 * 1024
-//		o.Concurrency = 3
-//	})
-//
-//	_, err := uploader.UploadObject(ctx, &transfermanager.UploadObjectInput{
-//		Bucket: aws.String(repo.bucket),
-//		Key:    aws.String(key),
-//		Body:   rdr,
-//	})
-//	if err != nil {
-//		log.Printf("S3 transfer manager put error: %v", err)
-//		return err
-//	}
-//
-//	return nil
-//}
