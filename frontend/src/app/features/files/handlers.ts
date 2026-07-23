@@ -4,10 +4,13 @@ import {UploadForm} from "@/app/features/shared/files/upload.ts";
 
 export interface CursorReq {
     modified_at: string | null;
-    uuid: string | null;
+    id: string | null;
 }
 
 export interface GetAllMetadataReq {
+    // TODO: remove user_id from request body — backend should derive
+    // this from the JWT to prevent IDOR. Currently the backend trusts
+    // the client-sent value, which is a security risk.
     user_id: string | null;
     cursor: CursorReq;
     limit: number;
@@ -15,7 +18,7 @@ export interface GetAllMetadataReq {
 
 export interface GetAllMetadataResp {
     status: string;
-    metadata: Metadata[];
+    data: Metadata[];
 }
 
 const api = new RestHandler(`http://127.0.0.1:8081`);
@@ -24,8 +27,8 @@ export async function getAllMetadata(request: GetAllMetadataReq): Promise<GetAll
         const resp: any = await api.handlePost<GetAllMetadataReq, any>(`api/files/get-all`, request);
         console.log("RAW RESPONSE:", resp);
         return {
-            status: resp.status || resp.Status || "fetched",
-            metadata: Array.isArray(resp.data) ? resp.data : (Array.isArray(resp.Data) ? resp.Data : []),
+            status: resp.status || "fetched",
+            data: Array.isArray(resp.data) ? resp.data : [],
         };
 }
 
@@ -34,4 +37,3 @@ export async function uploadFiles(files: File[]) {
     await form.prepare();
     return await form.send();
 }
-
