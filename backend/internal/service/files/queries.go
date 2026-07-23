@@ -192,10 +192,40 @@ func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadat
 	return result, nil
 }
 
-func (db *FileRepository) DeleteMetadata(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error {
+// FindMetadataByID returns a single file_metadata row by its primary key.
+func (db *FileRepository) FindMetadataByID(ctx context.Context, ID uuid.UUID) (FileMetadata, error) {
+	const q = `SELECT id, file_id, file_name, path, relative_path, size, file_type,
+		owner_id, version, hash, created_at, modified_at, uploaded_at
+	FROM file_metadata
+	WHERE id = $1;`
+
+	var model FileMetadata
+	err := db.Pool.QueryRow(ctx, q, ID).Scan(
+		&model.ID,
+		&model.FileID,
+		&model.FileName,
+		&model.Path,
+		&model.RelativePath,
+		&model.Size,
+		&model.FileType,
+		&model.OwnerID,
+		&model.Version,
+		&model.Hash,
+		&model.CreatedAt,
+		&model.ModifiedAt,
+		&model.UploadedAt,
+	)
+	if err != nil {
+		return FileMetadata{}, err
+	}
+	return model, nil
+}
+
+// DeleteMetadata deletes a file_metadata row by id and owner_id.
+func (db *FileRepository) DeleteMetadata(ctx context.Context, id uuid.UUID, ownerID uuid.UUID) error {
 	const q = `DELETE FROM file_metadata WHERE id = $1 AND owner_id = $2;`
 
-	status, err := db.Pool.Exec(ctx, q, id, ownerId)
+	status, err := db.Pool.Exec(ctx, q, id, ownerID)
 	if err != nil {
 		return fmt.Errorf(
 			"status: %s, could not delete file metadata, %w",
