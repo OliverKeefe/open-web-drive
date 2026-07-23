@@ -9,26 +9,34 @@ import (
 	"github.com/google/uuid"
 )
 
-type Metadata struct {
-	File   FileMetadata
-	Access AccessMetadata
-	Ipfs   IPFSMetadata
+// FileMetadata is the canonical model matching the file_metadata table.
+type FileMetadata struct {
+	ID           uuid.UUID `json:"id"`
+	FileID       uuid.UUID `json:"file_id"`
+	Version      int       `json:"version"`
+	OwnerID      uuid.UUID `json:"owner_id"`
+	FileName     string    `json:"file_name"`
+	Path         string    `json:"path"`
+	RelativePath string    `json:"relative_path"`
+	Size         int64     `json:"size"`
+	FileType     string    `json:"file_type"`
+	Hash         string    `json:"hash"`
+	CreatedAt    time.Time `json:"created_at"`
+	ModifiedAt   time.Time `json:"modified_at"`
+	UploadedAt   time.Time `json:"uploaded_at"`
 }
 
-// Metadata Model - need ContentCID string for IPFS
-type MetaData struct {
-	ID         uuid.UUID   `json:"uuid"`
-	FileName   string      `json:"file_name"`
-	Path       string      `json:"path"`
-	Size       uint64      `json:"size"`
-	FileType   string      `json:"file_type"`
-	ModifiedAt time.Time   `json:"modified_at"`
-	UploadedAt time.Time   `json:"created_at"`
-	Owner      uuid.UUID   `json:"owner_id"`
-	AccessTo   []uuid.UUID `json:"access_to"`
-	Group      []uuid.UUID `json:"group_id"`
-	CheckSum   []byte      `json:"checksum"`
-	Version    time.Time   `json:"version"`
+// FileMetadataResponse is the API response model.
+type FileMetadataResponse = FileMetadata
+
+// FilePermissions matches the file_permissions table.
+type FilePermissions struct {
+	ID            uuid.UUID `json:"id"`
+	FileID        uuid.UUID `json:"file_id"`
+	GranteeType   string    `json:"grantee_type"`
+	GranteeID     uuid.UUID `json:"grantee_id"`
+	AccessLevelID uuid.UUID `json:"access_level_id"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type Visibility int
@@ -46,68 +54,6 @@ type IPFSMetadata struct {
 	Shards         []string   `json:"shards"`
 	Uri            string     `json:"uri"`
 	HTTPGatewayURL string     `json:"http_gateway_url"`
-}
-
-type AccessMetadata struct {
-	OwnerID     uuid.UUID   `json:"owner_id"`
-	SharedWith  []uuid.UUID `json:"shared_with"`
-	GroupAccess []uuid.UUID `json:"group_access"`
-}
-
-type FileMetadata struct {
-	ID           uuid.UUID         `json:"uuid"`
-	OwnerID      uuid.UUID         `json:"owner_id"`
-	FileName     string            `json:"file_name"`
-	Path         string            `json:"path"`
-	RelativePath string            `json:"relative_path"`
-	Size         uint64            `json:"size"`
-	FileType     string            `json:"file_type"`
-	ModifiedAt   time.Time         `json:"modified_at"`
-	UploadedAt   time.Time         `json:"uploaded_at"`
-	CreatedAt    time.Time         `json:"created_at"`
-	Version      uuid.UUID         `json:"version"`
-	Hash         [32]byte          `json:"hash"`
-	Permissions  []FilePermissions `json:"permissions"`
-}
-
-type FilePermissions struct {
-	//FileID       uuid.UUID `json:"file_id"`
-	FileID      uuid.UUID `json:"permissions_id"`
-	GranteeType string    `json:"grantee_type"`
-	GranteeID   uuid.UUID `json:"grantee_id"`
-	AccessLevel uuid.UUID `json:"access_level"`
-}
-
-func (m *MetaData) ToResponse() MetaDataResponse {
-	return MetaDataResponse{
-		ID:         m.ID,
-		FileName:   m.FileName,
-		Path:       m.Path,
-		Size:       m.Size,
-		FileType:   m.FileType,
-		ModifiedAt: m.ModifiedAt,
-		UploadedAt: m.UploadedAt,
-		Owner:      m.Owner,
-		AccessTo:   m.AccessTo,
-		Group:      m.Group,
-		CheckSum:   m.CheckSum,
-		Version:    m.Version,
-	}
-}
-
-type MetaDataResponse struct {
-	ID         uuid.UUID   `json:"uuid"`
-	FileName   string      `json:"file_name"`
-	Path       string      `json:"path"`
-	Size       uint64      `json:"size"`
-	FileType   string      `json:"file_type"`
-	ModifiedAt time.Time   `json:"modified_at"`
-	UploadedAt time.Time   `json:"created_at"`
-	Owner      uuid.UUID   `json:"owner_id"`
-	AccessTo   []uuid.UUID `json:"access_to"`
-	Group      []uuid.UUID `json:"group_id"`
-	CheckSum   []byte      `json:"checksum"`
-	Version    time.Time   `json:"version"`
 }
 
 type GetAllMetadataRequest struct {
@@ -132,15 +78,15 @@ type FindMetadataRequest struct {
 	ID         uuid.UUID   `json:"file_id"`
 	FileName   string      `json:"file_name,omitempty"`
 	Path       string      `json:"path,omitempty"`
-	Size       uint64      `json:"size,omitempty"`
+	Size       int64       `json:"size,omitempty"`
 	FileType   string      `json:"file_type,omitempty"`
 	ModifiedAt time.Time   `json:"modified_at,omitempty"`
 	UploadedAt time.Time   `json:"uploaded_at,omitempty"`
 	Owner      uuid.UUID   `json:"owner_id"`
 	AccessTo   []uuid.UUID `json:"access_to,omitempty"`
 	Group      []uuid.UUID `json:"group_id,omitempty"`
-	CheckSum   []byte      `json:"checksum,omitempty"`
-	Version    time.Time   `json:"version,omitempty"`
+	Hash       string      `json:"hash,omitempty"`
+	Version    int         `json:"version,omitempty"`
 }
 
 func (req *FindMetadataRequest) Bind(r *http.Request) error {
@@ -150,8 +96,8 @@ func (req *FindMetadataRequest) Bind(r *http.Request) error {
 	return nil
 }
 
-func (req *FindMetadataRequest) ToModel() MetaData {
-	return MetaData{
+func (req *FindMetadataRequest) ToModel() FileMetadata {
+	return FileMetadata{
 		ID:         req.ID,
 		FileName:   req.FileName,
 		Path:       req.Path,
@@ -159,22 +105,30 @@ func (req *FindMetadataRequest) ToModel() MetaData {
 		FileType:   req.FileType,
 		ModifiedAt: req.ModifiedAt,
 		UploadedAt: req.UploadedAt,
-		Owner:      req.Owner,
-		AccessTo:   req.AccessTo,
-		Group:      req.Group,
-		CheckSum:   req.CheckSum,
+		OwnerID:    req.Owner,
+		Hash:       req.Hash,
 		Version:    req.Version,
 	}
 }
 
 type DeleteRequest struct {
 	ID uuid.UUID `json:"id"`
-	//OwnerID uuid.UUID `json:"owner_id"`
 }
 
 func (req *DeleteRequest) Bind(r *http.Request) error {
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		return err
+	}
+	return nil
+}
+
+type DownloadRequest struct {
+	ID uuid.UUID `json:"id"`
+}
+
+func (req *DownloadRequest) Bind(r *http.Request) error {
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		return fmt.Errorf("invalid json request: %w", err)
 	}
 	return nil
 }
