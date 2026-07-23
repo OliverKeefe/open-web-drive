@@ -51,6 +51,11 @@ func RegisterFileRoutes(mux *http.ServeMux, a *auth.Authenticator, db *database.
 		"PUT /api/files/metadata",
 		updateMetadataRoute,
 	)
+	searchRoute := route(a, searchSvc.Handle)
+	mux.Handle(
+		"POST /api/files/get-all",
+		searchRoute,
+	)
 
 	return nil
 }
