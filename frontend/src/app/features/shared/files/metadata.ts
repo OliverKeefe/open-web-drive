@@ -1,20 +1,21 @@
 import MediaInfo from "mediainfo.js";
-import {uploadObject} from "@/app/features/shared/ipfs/upload.ts";
 
 
 /**
  * Metadata interface maps extracted metadata to object.
  * Fields `path`, `relativePath`, `lastModified`, `lastModifiedDate`
  * `size` and `fileType` are set using MediaInfo.js metadata
- * extraction. The rest, `id`, `ownerId` and `checkSum` are
- * injected once extraction is complete. `id` serves as a key to
- * associate each metadata object with its respective ByteData.
- * */
-export type Metadata = ExtractedMetadata& {
+ * extraction. The `id` field is a client-generated UUID used as the
+ * multipart form part key to associate metadata with its file data.
+ *
+ * Property names match the Go multipartMetadata json tags exactly
+ * so JSON.stringify() produces the correct wire format.
+ */
+export type Metadata = ExtractedMetadata & {
     id: string
-    ownerId: string
-    checkSum: string
-    cids: string[]
+    file_name: string
+    created_at: number
+    uploadedAt: number
 }
 
 type ExtractedMetadata = {
@@ -46,16 +47,13 @@ export async function extractMetadata(file: File): Promise<Metadata> {
         locateFile: () => `/MediaInfoModule.wasm`,
     })
 
-    const [result, checksum] = await Promise.all([
-        mediaInfo.analyzeData(
-            () => file.size,
-            async (chunkSize, offset) => {
-                const buffer = await file.slice(offset, offset + chunkSize).arrayBuffer()
-                return new Uint8Array(buffer)
+    const result = await mediaInfo.analyzeData(
+        () => file.size,
+        async (chunkSize, offset) => {
+            const buffer = await file.slice(offset, offset + chunkSize).arrayBuffer()
+            return new Uint8Array(buffer)
         }
-        ),
-        getCheckSum(file)
-    ]);
+    )
 
     mediaInfo.close()
 
@@ -66,7 +64,6 @@ export async function extractMetadata(file: File): Promise<Metadata> {
     //const media = JSON.parse(result);
 
     console.log('Metadata:', result);
-    console.log('SHA-256:', checksum);
     return {
         path: file.name,
         relativePath: file.webkitRelativePath || file.name,
@@ -78,19 +75,10 @@ export async function extractMetadata(file: File): Promise<Metadata> {
         //media,
 
         id: crypto.randomUUID(),
-        ownerId: "29b6f168-03f6-4801-81d5-603b52f2c932",
-        checkSum: checksum
+        file_name: file.name,
+        created_at: file.lastModified,
+        uploadedAt: Date.now(),
     }
-}
-
-function generateFileId(): string {
-    //TODO: Check UUID exist in db.
-    return crypto.randomUUID();
-}
-
-function getOwnerId(): string {
-    //TODO: Check UUID exist in db.
-    return crypto.randomUUID();
 }
 
 // TODO: Compute this in backend instead, bad security and also >100mb browser dies.
