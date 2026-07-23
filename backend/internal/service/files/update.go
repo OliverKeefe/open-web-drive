@@ -9,7 +9,7 @@ import (
 )
 
 type updateMetadataRepository interface {
-	CheckExists(ctx context.Context, ID uuid.UUID) (bool, error)
+	CheckExists(ctx context.Context, fileID uuid.UUID, version int) (bool, error)
 }
 
 type UpdateMetadataService struct {
