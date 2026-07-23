@@ -126,4 +126,38 @@ export class RestHandler {
         await this.handleFailedRequest(response);
         return await response.json();
     }
+
+    public async handleDownload<T>(endpoint: string, payload: T): Promise<void> {
+        const token = useAuthStore.getState().token;
+        const url = `${this.baseURL}/${endpoint}`;
+        const options: RequestInit = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload)
+        };
+
+        const response = await fetch(url, options);
+        await this.handleFailedRequest(response);
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = this.getFileNameFromResponse(response) || "download";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(objectUrl);
+    }
+
+    private getFileNameFromResponse(response: Response): string | null {
+        const disposition = response.headers.get("Content-Disposition");
+        if (!disposition) return null;
+        const match = disposition.match(/filename="(.+)"/);
+        return match ? match[1] : null;
+    }
 }
