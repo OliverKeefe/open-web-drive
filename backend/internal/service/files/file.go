@@ -6,7 +6,7 @@ import (
 )
 
 type File struct {
-	Metadata MetaData
+	Metadata FileMetadata
 	Bytes    FileData
 }
 
