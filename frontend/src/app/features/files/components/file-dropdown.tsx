@@ -1,4 +1,4 @@
-import { EllipsisVertical, Info, Settings, Trash2 } from "lucide-react";
+import { EllipsisVertical, Info, Settings, Trash2, CloudDownload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -31,7 +31,7 @@ function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
         try {
             const api = new RestHandler("http://localhost:8081");
 
-            await api.handlePost<
+            await api.handleDelete<
                 { id: string; },
                 void
             >("api/files/delete", {
@@ -47,6 +47,21 @@ function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
             console.error("Failed to delete file on server:", error);
             const message = "File: " + fileId + " could not be deleted.";
             enqueueSnackbar(message, { autoHideDuration: 5000 })
+        }
+    }
+
+    async function handleDownload(e: React.MouseEvent) {
+        e.stopPropagation();
+
+        try {
+            const api = new RestHandler("http://localhost:8081");
+            await api.handleDownload<{ id: string }>("api/files/download", {
+                id: fileId,
+            });
+            enqueueSnackbar("Download started", { autoHideDuration: 1000 });
+        } catch (error) {
+            console.error("Failed to download file:", error);
+            enqueueSnackbar("Download failed", { autoHideDuration: 5000 });
         }
     }
 
@@ -86,6 +101,11 @@ function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
                 <DropdownMenuItem className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>File Settings</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem className="cursor-pointer" onClick={handleDownload}>
+                    <CloudDownload className="mr-2 h-4 w-4"/>
+                    <span>Download</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
