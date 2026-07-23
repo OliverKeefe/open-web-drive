@@ -31,11 +31,13 @@ func (svc *ScheduleDeleteService) TempDelete(w http.ResponseWriter, r *http.Requ
 	if err := request.Bind(r); err != nil {
 		log.Printf("unable to bind request to DeleteRequest %v", err)
 		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
 	}
 
 	if err := svc.execute(r.Context(), request); err != nil {
 		log.Printf("unable to delete file metadata, %v", err)
 		http.Error(w, "unable to delete file", http.StatusExpectationFailed)
+		return
 	}
 }
 

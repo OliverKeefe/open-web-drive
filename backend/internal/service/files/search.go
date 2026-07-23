@@ -11,9 +11,9 @@ import (
 )
 
 type searchRepository interface {
-	FindMetadataByID(ctx context.Context, ID uuid.UUID) (Metadata, error)
-	FindMetadata(m MetaData) (string, []any)
-	FindAllMetadata(ctx context.Context, req GetAllMetadataRequest) ([]MetaData, error)
+	FindMetadataByID(ctx context.Context, ID uuid.UUID) (FileMetadata, error)
+	FindMetadata(ctx context.Context, m FileMetadata) ([]FileMetadata, error)
+	FindAllMetadata(ctx context.Context, req GetAllMetadataRequest) ([]FileMetadata, error)
 }
 
 type SearchService struct {
@@ -58,40 +58,21 @@ func (svc *SearchService) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (svc *SearchService) execute(ctx context.Context, request GetAllMetadataRequest) ([]MetaDataResponse, error) {
-	var (
-		files    []MetaData
-		response []MetaDataResponse
-	)
-
+func (svc *SearchService) execute(ctx context.Context, request GetAllMetadataRequest) ([]FileMetadataResponse, error) {
 	files, err := svc.Db.FindAllMetadata(ctx, request)
 	if err != nil {
-		log.Printf("unable to get all files for user: %s, %v ", request.UserID, err)
+		return nil, err
 	}
 
-	for _, file := range files {
-		file := file.ToResponse()
-		if err != nil {
-			log.Printf("unable to map file metadata: %v, to dto: %v", file, err)
-		}
-		response = append(response, file)
+	response := make([]FileMetadataResponse, len(files))
+	for i, file := range files {
+		response[i] = FileMetadataResponse(file)
 	}
 
 	return response, nil
 }
 
-func (svc *SearchService) findMetadata(ctx context.Context, request FindMetadataRequest) ([]MetaData, error) {
-	//var (
-	//	files []MetaData
-	//)
-	//
-	//model := request.ToModel()
-	//files, err := svc.Db.FindMetadata(ctx, model)
-	//if err != nil {
-	//	log.Printf("unable to get file metadata: %v", err)
-	//	return files, err
-	//}
-	//
-	//return files, nil
-	panic("not implemented")
+func (svc *SearchService) findMetadata(ctx context.Context, request FindMetadataRequest) ([]FileMetadata, error) {
+	model := request.ToModel()
+	return svc.Db.FindMetadata(ctx, model)
 }
