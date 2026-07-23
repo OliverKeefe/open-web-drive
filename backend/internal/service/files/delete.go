@@ -59,18 +59,12 @@ func (svc *DeleteService) execute(ctx context.Context, request DeleteRequest) er
 
 	ownerID, err := uuid.Parse(userID)
 	if err != nil {
-		log.Printf("unable to parse userID string to uuid")
+		return fmt.Errorf("unable to parse userID string to uuid: %w", err)
 	}
 
 	err = svc.Db.DeleteFileData(ctx, request.ID, ownerID)
 	if err != nil {
-		return fmt.Errorf("unable to delete file data, %v", err)
-	}
-
-	err = svc.Db.DeleteMetadata(ctx, request.ID, ownerID)
-	if err != nil {
-		log.Printf("could not delete file metadata, %v", err)
-		return err
+		return fmt.Errorf("unable to delete file data, %w", err)
 	}
 
 	return nil
