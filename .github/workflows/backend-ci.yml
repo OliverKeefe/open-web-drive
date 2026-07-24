@@ -1,0 +1,29 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths: [backend/**]
+  pull_request:
+    branches: [main]
+    paths: [backend/**]
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "stable"
+          cache-dependency-path: backend/go.sum
+      - run: go vet ./...
+        working-directory: backend
+      - run: go test ./... -v
+        working-directory: backend
+      - run: go-build ./...
+        working-directory: backend
