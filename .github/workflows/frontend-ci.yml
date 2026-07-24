@@ -8,6 +8,10 @@ on:
     branches: [main]
     paths: [frontend/**]
 
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-20.04
