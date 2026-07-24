@@ -25,5 +25,5 @@ jobs:
         working-directory: backend
       - run: go test ./... -v
         working-directory: backend
-      - run: go-build ./...
+      - run: go build ./...
         working-directory: backend
