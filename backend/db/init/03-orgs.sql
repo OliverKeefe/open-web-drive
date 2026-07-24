@@ -1,6 +1,8 @@
--- TENANTS
+-- ORGANISATIONS / TENANTS
 CREATE TABLE orgs (
     id UUID PRIMARY KEY NOT NULL,
-    name VARCHAR(64) NOT NULL
+    name VARCHAR(64) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE orgs IS 'Organisations / Tenants';
