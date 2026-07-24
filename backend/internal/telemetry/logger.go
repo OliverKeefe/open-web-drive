@@ -1,11 +1,5 @@
 package telemetry
 
-import (
-	"log/slog"
-	"os"
-)
+type Logger struct{}
 
-type Logger struct {
-}
-
-func initLogger()
+func initLogger() {}
