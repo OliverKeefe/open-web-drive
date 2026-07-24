@@ -39,7 +39,7 @@ func NewS3Client() (S3Client, error) {
 	}
 
 	for _, bucket := range out.Buckets {
-		log.Printf(*bucket.Name)
+		log.Printf("Bucket Name: %v", &bucket.Name)
 	}
 
 	return S3Client{
