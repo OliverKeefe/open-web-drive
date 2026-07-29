@@ -1,9 +1,16 @@
 import Keycloak from 'keycloak-js';
 
+const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL;
+const keycloakRealm = import.meta.env.VITE_KEYCLOAK_REALM;
+const keycloakClientId = import.meta.env.VITE_KEYCLOAK_CLIENT_ID;
+if (!keycloakUrl) throw new Error('VITE_KEYCLOAK_URL is not set. Set it in your .env file or pass it at build time.');
+if (!keycloakRealm) throw new Error('VITE_KEYCLOAK_REALM is not set. Set it in your .env file or pass it at build time.');
+if (!keycloakClientId) throw new Error('VITE_KEYCLOAK_CLIENT_ID is not set. Set it in your .env file or pass it at build time.');
+
 const keycloak = new Keycloak({
-    url: 'http://127.0.0.1:8080',
-    realm: 'gestalt',
-    clientId: 'frontend-service',
+    url: keycloakUrl,
+    realm: keycloakRealm,
+    clientId: keycloakClientId,
 });
 
 let isInitialized = false;
