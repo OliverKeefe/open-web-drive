@@ -21,7 +21,9 @@ export interface GetAllMetadataResp {
     data: Metadata[];
 }
 
-const api = new RestHandler(`http://127.0.0.1:8081`);
+const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
+if (!backendBaseUrl) throw new Error('VITE_BACKEND_BASE_URL is not set. Set it in your .env file or pass it at build time.');
+const api = new RestHandler(backendBaseUrl);
 
 export async function getAllMetadata(request: GetAllMetadataReq): Promise<GetAllMetadataResp> {
         const resp: any = await api.handlePost<GetAllMetadataReq, any>(`api/files/get-all`, request);
