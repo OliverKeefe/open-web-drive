@@ -17,6 +17,9 @@ interface FileDropdownProps {
     onDeleted: () => void;
 }
 
+const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
+if (!backendBaseUrl) throw new Error('VITE_BACKEND_BASE_URL is not set. Set it in your .env file or pass it at build time.');
+
 function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
     const userId = useAuthStore((s) => s.userId);
 
@@ -29,7 +32,7 @@ function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
         }
 
         try {
-            const api = new RestHandler("http://localhost:8081");
+            const api = new RestHandler(backendBaseUrl);
 
             await api.handleDelete<
                 { id: string; },
@@ -54,7 +57,7 @@ function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
         e.stopPropagation();
 
         try {
-            const api = new RestHandler("http://localhost:8081");
+            const api = new RestHandler(backendBaseUrl);
             await api.handleDownload<{ id: string }>("api/files/download", {
                 id: fileId,
             });
