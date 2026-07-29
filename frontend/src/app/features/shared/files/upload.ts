@@ -50,7 +50,9 @@ export class UploadForm {
     public async send(): Promise<any> {
         this.buildFormData();
 
-        const url = "http://localhost:8081/api/files/upload";
+        const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
+        if (!backendBaseUrl) throw new Error('VITE_BACKEND_BASE_URL is not set');
+        const url = `${backendBaseUrl}/api/files/upload`;
         const token = useAuthStore.getState().token;
 
         const response = await fetch(url, {
