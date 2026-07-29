@@ -87,7 +87,7 @@ export function UploadDialog({ onUploaded }: UploadDialogProps) {
 
                 <Dropzone
                     maxFiles={10}
-                    maxSize={1024 * 1024 * 1024 * 15}
+                    maxSize={Number(import.meta.env.VITE_MAX_UPLOAD_SIZE_BYTES)}
                     minSize={1}
                     onDrop={handleDrop}
                     onError={console.error}
