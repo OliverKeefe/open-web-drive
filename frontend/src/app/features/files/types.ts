@@ -2,7 +2,6 @@ export type Metadata = {
     id:            string;
     file_id:       string;
     version:       number;
-    owner_id:      string;
     file_name:     string;
     path:          string;
     relative_path: string;
