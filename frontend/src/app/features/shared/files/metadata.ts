@@ -80,13 +80,3 @@ export async function extractMetadata(file: File): Promise<Metadata> {
         uploadedAt: Date.now(),
     }
 }
-
-// TODO: Compute this in backend instead, bad security and also >100mb browser dies.
-async function getCheckSum(file: File): Promise<string> {
-    const arrayBuffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-
-    return Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-}
