@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -18,8 +19,14 @@ type S3Client struct {
 }
 
 func NewS3Client() (S3Client, error) {
-	awsEndpoint := "http://localhost:4566"
-	awsRegion := "us-east-1"
+	awsEndpoint := os.Getenv("S3_ENDPOINT")
+	if awsEndpoint == "" {
+		log.Fatalf("S3_ENDPOINT is required")
+	}
+	awsRegion := os.Getenv("AWS_REGION")
+	if awsRegion == "" {
+		log.Fatalf("AWS_REGION is required")
+	}
 
 	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(awsRegion),
