@@ -9,15 +9,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 func Run() error {
 	ctx := context.Background()
 
-	a, err := registerKeycloakAuth(
-		"http://127.0.0.1:8080/realms/gestalt",
-		"http://127.0.0.1:8080/realms/gestalt/protocol/openid-connect/certs",
-	)
+	keycloakIssuer := os.Getenv("KEYCLOAK_ISSUER_URL")
+	if keycloakIssuer == "" {
+		return fmt.Errorf("KEYCLOAK_ISSUER_URL is required")
+	}
+	keycloakJwks := os.Getenv("KEYCLOAK_JWKS_URL")
+	if keycloakJwks == "" {
+		return fmt.Errorf("KEYCLOAK_JWKS_URL is required")
+	}
+
+	a, err := registerKeycloakAuth(keycloakIssuer, keycloakJwks)
 	if err != nil {
 		return err
 	}
@@ -33,12 +40,18 @@ func Run() error {
 	if err = router.RegisterFileRoutes(appMux, a, db); err != nil {
 		return err
 	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		return fmt.Errorf("PORT is required")
+	}
+
 	srv := &http.Server{
-		Addr:    ":8081",
+		Addr:    ":" + port,
 		Handler: handler,
 	}
 
-	log.Println("running on port: 8081...")
+	log.Printf("running on port: %s...", port)
 	return srv.ListenAndServe()
 }
 
