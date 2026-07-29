@@ -7,6 +7,7 @@ import (
 	"backend/internal/platform"
 	files2 "backend/internal/service/files"
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 )
@@ -20,7 +21,7 @@ var (
 func RegisterFileRoutes(mux *http.ServeMux, a *auth.Authenticator, db *database.MetadataDatabase) error {
 	bucketURL := os.Getenv("BLOB_BUCKET_URL")
 	if bucketURL == "" {
-		bucketURL = "s3://temp-buck"
+		return fmt.Errorf("BLOB_BUCKET_URL is required")
 	}
 
 	client, err := platform.NewBlobStorageClient(context.Background(), bucketURL)
