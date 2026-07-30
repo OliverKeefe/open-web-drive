@@ -1,7 +1,7 @@
 import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
-import {defineConfig, type Plugin} from "vite"
+import {defineConfig, type Plugin} from "vitest/config"
 import fs from "fs"
 
 function copyWasmModules(): Plugin {
@@ -44,6 +44,10 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
   },
 })
 

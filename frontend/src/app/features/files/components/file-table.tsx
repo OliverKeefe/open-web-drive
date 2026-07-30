@@ -6,17 +6,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { UploadDialog } from "@/app/features/shared/components/dialog/upload-dialog"
 import { Button } from "@/components/ui/button"
 import { Clock, FolderPlus, Star } from "lucide-react"
-import {
-    type CursorReq,
-    getAllMetadata,
-} from "@/app/features/files/handlers.ts"
 import type { Metadata } from "@/app/features/files/types.ts"
-import { useAuthStore } from "@/security/auth/authstore/auth-store"
+import { useFiles } from "@/app/features/files/hooks/use-files"
 import { getIconForFile } from "@react-symbols/icons/utils"
 import { FileDialog } from "@/app/features/files/components/file-dialog.tsx";
 import FileDropdown from "@/app/features/files/components/file-dropdown.tsx";
@@ -27,23 +23,25 @@ import FileDropdown from "@/app/features/files/components/file-dropdown.tsx";
 export function FileTable() {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [activeFile, setActiveFile] = useState<Metadata | null>(null)
-    const userId = useAuthStore((s) => s.userId)
-    const [files, setFiles] = useState<Metadata[]>([])
     const [selected, setSelected] = useState<string[]>([])
-    const { request } = usePagination(userId, 20);
+    const sentinelRef = useRef<HTMLDivElement>(null)
 
-    /**
-     * Main refresh file function.
-     * */
-    async function refreshFiles() {
-        if (!userId || !request.user_id) return;
-        const resp = await getAllMetadata(request);
-        setFiles(resp.data);
-    }
+    const { files, isLoadingMore, hasMore, loadMore, refresh } = useFiles({ limit: 20 })
+
+    const loadMoreRef = useRef(loadMore)
+    loadMoreRef.current = loadMore
 
     useEffect(() => {
-        refreshFiles();
-    }, [request, userId]);
+        const el = sentinelRef.current
+        if (!el || !hasMore) return
+
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting) loadMoreRef.current() },
+            { rootMargin: "200px" },
+        )
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [hasMore])
 
     /**
      * Handles opening FileDialog component on file.
@@ -74,7 +72,7 @@ export function FileTable() {
      * This allows for instant UI update post event.
      * */
     async function handleFileDeleted() {
-        await refreshFiles();
+        await refresh();
     }
 
     return (
@@ -86,7 +84,7 @@ export function FileTable() {
 
                 <UploadDialog
                     onUploaded={async () => {
-                        await refreshFiles();
+                        await refresh();
                     }}
                 />
 
@@ -145,6 +143,13 @@ export function FileTable() {
                 </TableBody>
             </Table>
 
+            <div ref={sentinelRef} className="h-4" />
+            {isLoadingMore && (
+                <div className="flex justify-center py-4 text-muted-foreground text-sm">
+                    Loading more files…
+                </div>
+            )}
+
             {activeFile && (
                 <FileDialog
                     open={dialogOpen}
@@ -157,15 +162,6 @@ export function FileTable() {
             )}
         </div>
     )
-}
-
-/**
- * Hook for file pagination on scroll.
- * */
-function usePagination(userId: string | null, limit: number = 20) {
-    const [cursor] = useState<CursorReq | null>(null);
-    const request = useMemo(() => ({ user_id: userId, cursor, limit }), [userId, cursor, limit]);
-    return { request };
 }
 
 /**
