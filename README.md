@@ -1,8 +1,8 @@
 <h1 align="left">Open Web Drive</h1>
 
 <p align="left"> 
-<img alt="backend" src="https://img.shields.io/github/actions/workflow/status/OliverKeefe/gestalto/backend-ci.yml?branch=main&label=backend">
-<img alt="frontend" src="https://img.shields.io/github/actions/workflow/status/OliverKeefe/gestalto/frontend-ci.yml?branch=main&label=frontend">
+<img alt="backend" src="https://img.shields.io/github/actions/workflow/status/OliverKeefe/open-web-drive/backend-ci.yml?branch=main&label=backend">
+<img alt="frontend" src="https://img.shields.io/github/actions/workflow/status/OliverKeefe/open-web-drive/frontend-ci.yml?branch=main&label=frontend">
 </p>
 
 ## 🛠️ About This Project
@@ -21,13 +21,13 @@
 Built for privacy-conscious individuals and homelab enthusiasts, it provides file management, client-side encryption, and integration with your preferred OAuth2 / OIDC identity provider.
 
 <p align="center">
-  <img src="docs/media/readme/OWA-Screenshot.png" alt="Screenshot of Gestalt Web Storage" width="45%">
+  <img src="docs/media/readme/OWA-Screenshot.png" alt="App Screenshot" width="55%">
 </p>
 
 ## 🚀 Quick Start
 
 > [!NOTE]
-> Client-Side Encryption and IPFS Integration are currently undergoing a full re-write.
+> Auth / Client-Side Encryption are currently undergoing a full re-write.
 
 
 ```shell
