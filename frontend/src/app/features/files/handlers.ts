@@ -8,10 +8,6 @@ export interface CursorReq {
 }
 
 export interface GetAllMetadataReq {
-    // TODO: remove user_id from request body — backend should derive
-    // this from the JWT to prevent IDOR. Currently the backend trusts
-    // the client-sent value, which is a security risk.
-    user_id: string | null;
     cursor: CursorReq;
     limit: number;
 }
