@@ -14,7 +14,11 @@ import (
 	"log/slog"
 	"mime"
 	"net/http"
+	"net/url"
+	"os"
 	"path"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -71,8 +75,19 @@ func (svc *UploadService) Handle(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	// FYI - 5<<20 is a bitshift operation (5*2^20 = 5,242,880 Bytes or 5 MegaBytes)
-	r.Body = http.MaxBytesReader(w, r.Body, 5<<20)
+	maxUploadStr := os.Getenv("MAX_UPLOAD_BYTES")
+	if maxUploadStr == "" {
+		slog.Error("MAX_UPLOAD_BYTES is required")
+		http.Error(w, "server configuration error", http.StatusInternalServerError)
+		return
+	}
+	maxUpload, err := strconv.ParseInt(maxUploadStr, 10, 64)
+	if err != nil || maxUpload <= 0 {
+		slog.Error("MAX_UPLOAD_BYTES is invalid", "value", maxUploadStr)
+		http.Error(w, "server configuration error", http.StatusInternalServerError)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, maxUpload)
 	if err := svc.execute(r); err != nil {
 		slog.Error("upload failed", "error", err)
 		http.Error(w, "upload failed", http.StatusBadRequest)
