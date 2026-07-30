@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"mime"
 	"net/http"
 	"path"
 	"strings"
@@ -218,9 +219,15 @@ func (svc *UploadService) saveFile(ctx context.Context, pf *pendingFile) error {
 }
 
 func (svc *UploadService) saveFileData(ctx context.Context, ownerID uuid.UUID, r io.Reader, fileName string) error {
-	key := fmt.Sprintf("%s-%s", ownerID, fileName)
+	key := fmt.Sprintf("%s/%s", ownerID, url.PathEscape(fileName))
 
-	err := svc.BlobStorageClient.MultipartUpload(ctx, key, r, nil)
+	contentType := mime.TypeByExtension(filepath.Ext(fileName))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	opts := &blob.WriterOptions{ContentType: contentType}
+
+	err := svc.BlobStorageClient.MultipartUpload(ctx, key, r, opts)
 	if err != nil {
 		return err
 	}
