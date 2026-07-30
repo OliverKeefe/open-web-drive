@@ -106,13 +106,13 @@ func (db *FileRepository) PersistMetadata(ctx context.Context, metadata FileMeta
 }
 
 // FindAllMetadata returns all file_metadata rows for a user, with cursor-based pagination.
-func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadataRequest) ([]FileMetadata, error) {
+func (db *FileRepository) FindAllMetadata(ctx context.Context, ownerID uuid.UUID, cursor *MetadataCursor, limit int) ([]FileMetadata, error) {
 	var (
 		rows pgx.Rows
 		err  error
 	)
 
-	if req.Cursor == nil || req.Cursor.ID == uuid.Nil || req.Cursor.ModifiedAt.IsZero() {
+	if cursor == nil || cursor.ID == uuid.Nil || cursor.ModifiedAt.IsZero() {
 		rows, err = db.Pool.Query(ctx, `
 			SELECT id, file_id, file_name, path, relative_path, size, file_type,
 				owner_id, version, hash, created_at, modified_at, uploaded_at
@@ -120,7 +120,7 @@ func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadat
 			WHERE owner_id = $1
 			ORDER BY modified_at DESC, id DESC
 			LIMIT $2;
-		`, req.UserID, req.Limit)
+		`, ownerID, limit)
 	} else {
 		rows, err = db.Pool.Query(ctx, `
 			SELECT id, file_id, file_name, path, relative_path, size, file_type,
@@ -130,14 +130,14 @@ func (db *FileRepository) FindAllMetadata(ctx context.Context, req GetAllMetadat
 				AND (modified_at, id) < ($2, $3)
 			ORDER BY modified_at DESC, id DESC
 			LIMIT $4;
-		`, req.UserID, req.Cursor.ModifiedAt, req.Cursor.ID, req.Limit)
+		`, ownerID, cursor.ModifiedAt, cursor.ID, limit)
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	result := make([]FileMetadata, 0, req.Limit)
+	result := make([]FileMetadata, 0, limit)
 
 	for rows.Next() {
 		var model FileMetadata
