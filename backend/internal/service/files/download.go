@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 
 	"github.com/google/uuid"
 	"gocloud.dev/blob"
@@ -77,6 +78,6 @@ func (svc *DownloadService) execute(ctx context.Context, req DownloadRequest, w 
 }
 
 func (svc *DownloadService) download(ctx context.Context, ownerID uuid.UUID, fileName string, w io.Writer) error {
-	key := fmt.Sprintf("%s-%s", ownerID, fileName)
+	key := fmt.Sprintf("%s/%s", ownerID, url.PathEscape(fileName))
 	return svc.BlobStorageClient.Download(ctx, key, w, nil)
 }
