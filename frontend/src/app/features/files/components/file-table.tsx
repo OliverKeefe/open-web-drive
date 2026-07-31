@@ -77,19 +77,17 @@ export function FileTable() {
 
     return (
         <div>
-            <h1 className="text-2xl font-semibold pb-4 pt-4 m-1">All files</h1>
+            <h1 className="text-2xl font-semibold pb-4 pt-4 m-1">Your Files</h1>
 
             <nav className="w-full flex gap-3">
-                <Button variant="outline"><Clock /> Recents</Button>
-
                 <UploadDialog
                     onUploaded={async () => {
                         await refresh();
                     }}
                 />
-
-                <Button variant="outline"><FolderPlus /> New Folder</Button>
-                <Button variant="outline"><Star /> Favorites</Button>
+                <Button variant="outline"><Clock /></Button>
+                <Button variant="outline"><FolderPlus /></Button>
+                <Button variant="outline"><Star /></Button>
             </nav>
 
             <Table className="mt-2 w-full table-fixed">
