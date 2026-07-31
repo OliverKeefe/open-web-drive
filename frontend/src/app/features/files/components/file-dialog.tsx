@@ -50,7 +50,7 @@ export function FileDialog({
                 <p className={"truncate"}>Shards: bagbaierahrldusuunn3mt3xcgfue3aav6zcynk7ynpwzhgyi4l6muyp4hjhq</p>
                 <h1>Recovery </h1>
                     <Button variant={"outline"}>
-                        <a href={"https://bafybeia7wkemsgryogneimjafwwkb33ifwh2oo3djba3lqfeg3lkrqn464.ipfs.w3s.link/"}> Fetch from IPFS</a>
+                        <a href={import.meta.env.VITE_IPFS_GATEWAY_URL}> Fetch from IPFS</a>
                     </Button>
             </DialogContent>
         </Dialog>
