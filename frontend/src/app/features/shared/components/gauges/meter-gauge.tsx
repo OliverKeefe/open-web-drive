@@ -17,7 +17,7 @@ export function MeterGauge({ segmentData, total, children }: MeterGaugeProps) {
         percentage: (seg.value / total) * 100,
     }))
     return (
-        <div className={"relative w-full h-[14px] rounded-full bg-neutral-700 overflow-hidden"}>
+        <div className={"relative w-full h-[8px] rounded-full bg-neutral-600 overflow-hidden"}>
             <div className={"absolute inset-0 flex"}>
                 {processedSegments.map((seg, i) => (
                     <Segment key={i} {...seg} />
