@@ -12,6 +12,7 @@ import {
     School,
     BriefcaseBusiness,
     FolderClosed,
+    Handshake, Laptop, Cloud,
 } from "lucide-react"
 
 import { NavFavorites } from "@/app/features/shared/components/navigation/nav-favorites.tsx"
@@ -28,6 +29,10 @@ import {
 import { UploadDialog } from "@/app/features/shared/components/dialog/upload-dialog.tsx";
 import {RestHandler} from "@/app/features/shared/api/rest/rest-handler.ts";
 import { ScrollArea } from "@/components/ui/scroll-area"
+import type {MeterGaugeSegment} from "@/app/features/shared/components/gauges/meter-gauge.tsx";
+import {CardDescription, CardTitle} from "@/components/ui/card.tsx";
+import {MeterGauge} from "@/app/features/shared/components/gauges/meter-gauge.tsx";
+import {Container} from "@/app/features/shared/components/layout/container.tsx";
 
 interface FolderData {
   id: string;
@@ -50,12 +55,12 @@ const data = {
       plan: "Enterprise",
     },
     {
-      name: "University Of Essex",
+      name: "Org 1",
       logo: School,
       plan: "Startup",
     },
     {
-      name: "Company ltd",
+      name: "Org 2",
       logo: BriefcaseBusiness,
       plan: "Free",
     },
@@ -67,177 +72,69 @@ const data = {
       icon: Search,
     },
     {
-      title: "Files",
+      title: "My Files",
       url: "/",
       icon: FolderClosed,
       isActive: true,
     },
     {
-      title: "Photos",
+      title: "Devices",
       url: "/photos",
-      icon: Image,
+      icon: Laptop,
     },
     {
-      title: "Documents",
+      title: "Shared With Me",
       url: "/documents",
-      icon: File,
+      icon: Handshake,
       badge: "10",
     },
   ],
   navSecondary: [
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-    },
-    {
-      title: "Apps",
-      url: "#",
-      icon: Blocks,
-    },
-    {
-      title: "Rubbish",
-      url: "#",
-      icon: Trash2,
-    },
-    {
-      title: "Help",
-      url: "#",
-      icon: MessageCircleQuestion,
-    },
-  ],
-  favorites: [
-    {
-      name: "budget_tracker.xlsx",
-      url: "#",
-      emoji: "📄",
-    },
-    {
-      name: "CV.docx",
-      url: "#",
-      emoji: "📄",
-    },
-    {
-      name: "Assignment 1 Essay.docx",
-      url: "#",
-      emoji: "📄",
-    },
-  ],
-  workspaces: [
-    {
-      name: "CE303 Study Group",
-      emoji: "🧑‍🎓",
-      pages: [
-        {
-          name: "Daily Journal & Reflection.note",
+      {
+          title: "Rubbish",
           url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "List_of_localPubs.docx",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Contents Insurance FilesPage",
-          url: "#",
-          emoji: "📁",
-        },
-      ],
-    },
-    {
-      name: "House Move",
-      emoji: "🏡",
-      pages: [
-        {
-          name: "Career Objectives & Milestones",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Skill Acquisition & Training Log",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Networking Contacts & Events",
-          url: "#",
-          emoji: "📁",
-        },
-      ],
-    },
-    {
-      name: "Creative Projects",
-      emoji: "🖌️",
-      pages: [
-        {
-          name: "Writing Ideas & Story Outlines",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Art & Design Portfolio",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Music Composition & Practice Log",
-          url: "#",
-          emoji: "📁",
-        },
-      ],
-    },
-    {
-      name: "Home Management",
-      emoji: "🪴",
-      pages: [
-        {
-          name: "Household Budget & Expense Tracking.docx",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Home Maintenance Schedule & Tasks.docx",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Family Calendar & Event Planning",
-          url: "#",
-          emoji: "📁",
-        },
-      ],
-    },
-    {
-      name: "Travel & Holidays",
-      emoji: "✈️",
-      pages: [
-        {
-          name: "Trip Planning & Itineraries",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Travel Bucket List & Inspiration",
-          url: "#",
-          emoji: "📁",
-        },
-        {
-          name: "Travel Journal & Photo Gallery",
-          url: "#",
-          emoji: "📁",
-        },
-      ],
-    },
-  ],
+          icon: Trash2,
+      },
+      {
+        title: "Settings",
+        url: "/settings",
+        icon: Settings2,
+      },
+      {
+        title: "Storage",
+        url: "#",
+        icon: Cloud,
+      },
+   ],
 }
 
-const client: RestHandler = new RestHandler(`http://localhost:8081`);
+const usedStorage = 200;
+const totalFiles = 354;
+const totalDocuments = 243;
+const totalPhotos = 1203;
+const availableStorage = 500;
+const segdat: MeterGaugeSegment[] = [
+    {
+        label: "Photos",
+        value: 200,
+        color: "bg-yellow-500",
+        percentage: 0.25,
+    },
+    {
+        label: "Documents",
+        value: 15.6,
+        color: "bg-blue-500",
+        percentage: 0.156,
+    },
+    {
+        label: "Code Repos",
+        value: 3.9,
+        color: "bg-green-500",
+        percentage: 0.039,
+    }
+];
+
+const client: RestHandler = new RestHandler(`VITE_BACKEND_BASE_URL`);
 
 function GetFavorites(): Promise<FavoritesData[]> {
   return client.handleGet<FavoritesData[]>(`files/favorites`)
@@ -257,9 +154,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
             <SidebarContent className="min-h-0">
                 <ScrollArea className="h-full [&_[data-radix-scroll-area-scrollbar]]:w-1" >
-                    <NavFavorites favorites={data.favorites} />
-                    <NavWorkspaces workspaces={data.workspaces} />
                     <NavSecondary items={data.navSecondary} className="mt-auto" />
+                    <div className="p-1 ml-3 mr-3">
+                        <p className="font-sans text-sm text-foreground">45 GB / 250 GB Remaining.</p>
+                        <MeterGauge
+                            segmentData={segdat}
+                            total={200}
+                            children={undefined}>
+                        </MeterGauge>
+                    </div>
                 </ScrollArea>
             </SidebarContent>
 
@@ -267,4 +170,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Sidebar>
     )
 }
-
