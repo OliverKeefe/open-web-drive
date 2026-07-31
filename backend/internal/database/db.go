@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/jackc/pgx/v5"
@@ -24,7 +24,7 @@ type MetadataDatabase struct {
 }
 
 func New(ctx context.Context, envVar string) (*MetadataDatabase, error) {
-	log.Printf("DATABASE_URL=%s", os.Getenv("DATABASE_URL"))
+	slog.Info("starting database.")
 
 	dsn := os.Getenv(envVar)
 	if dsn == "" {
