@@ -32,7 +32,7 @@ export default function Login(props: { kcContext: Extract<KcContext, { pageId: "
                     <CardHeader>
                         <CardTitle>{i18n.msg("loginTitle", kcContext.realm.displayName ?? kcContext.realm.name)}</CardTitle>
                         <CardDescription>
-                            Sign in with your Gestalto account.
+                            Sign in with your OWD account.
                         </CardDescription>
                     </CardHeader>
 
