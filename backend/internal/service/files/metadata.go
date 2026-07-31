@@ -57,7 +57,6 @@ type IPFSMetadata struct {
 }
 
 type GetAllMetadataRequest struct {
-	UserID uuid.UUID       `json:"user_id"`
 	Cursor *MetadataCursor `json:"cursor"`
 	Limit  int             `json:"limit"`
 }
