@@ -1,7 +1,5 @@
 import {extractMetadata, type Metadata} from "@/app/features/shared/files/metadata";
 import {useAuthStore} from "@/security/auth/authstore/auth-store.ts";
-import { uploadObject } from "@/app/features/shared/ipfs/upload";
-import { type ObjectType } from "@/app/features/shared/ipfs/types";
 
 type PayloadItem = {
     id: string
@@ -85,24 +83,5 @@ export class UploadForm {
         }
     }
 
-    private async ipfsUpload(): Promise<Response> {
-        for (const { id, metadata, file } of this.payload) {
-            try {
-                if (metadata.size > 4 * 1024 * 1024 * 1024) {
-                    await uploadObject(id, file, metadata, ObjectType.CAR_FILE_SHARDS);
-                }
-
-                else if (metadata.fileType === "dir") {
-                    await uploadObject(id, file, metadata, ObjectType.DIRECTORY);
-                }
-
-                else {
-                    await uploadObject(id, file, metadata, ObjectType.FILE);
-                }
-            } catch(err) {
-                console.log(`unable to upload file: ${metadata.id} to IPFS`, err);
-            }
-        }
-    }
 }
 
