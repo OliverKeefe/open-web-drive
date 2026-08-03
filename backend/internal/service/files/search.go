@@ -2,8 +2,10 @@ package files
 
 import (
 	"backend/internal/api/message"
+	"backend/internal/auth"
 	"backend/internal/platform"
 	"context"
+	"errors"
 	"log"
 	"net/http"
 
@@ -13,7 +15,7 @@ import (
 type searchRepository interface {
 	FindMetadataByID(ctx context.Context, ID uuid.UUID) (FileMetadata, error)
 	FindMetadata(ctx context.Context, m FileMetadata) ([]FileMetadata, error)
-	FindAllMetadata(ctx context.Context, req GetAllMetadataRequest) ([]FileMetadata, error)
+	FindAllMetadata(ctx context.Context, ownerID uuid.UUID, cursor *MetadataCursor, limit int) ([]FileMetadata, error)
 }
 
 type SearchService struct {
@@ -59,7 +61,16 @@ func (svc *SearchService) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (svc *SearchService) execute(ctx context.Context, request GetAllMetadataRequest) ([]FileMetadataResponse, error) {
-	files, err := svc.Db.FindAllMetadata(ctx, request)
+	userID, ok := auth.UserIDFromCtx(ctx)
+	if !ok {
+		return nil, errors.New("unable to get userID from context")
+	}
+	ownerID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, errors.New("invalid user id in JWT claims")
+	}
+
+	files, err := svc.Db.FindAllMetadata(ctx, ownerID, request.Cursor, request.Limit)
 	if err != nil {
 		return nil, err
 	}
