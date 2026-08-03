@@ -1,6 +1,6 @@
 {
-  "name": "gestalt.ws",
-  "short_name": "gestalt",
+  "name": "open-web-drive",
+  "short_name": "owd",
   "icons": [
     {
       "src": "/public/./web-app-manifest-192x192.png",
