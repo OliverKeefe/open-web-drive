@@ -3,8 +3,8 @@ import {Flame, FolderClosed, GitBranch, LogOut, Settings2, Snowflake, SquareTerm
 import React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {Link} from "@tanstack/react-router";
-import {useAuthStore} from "@/security/auth/authstore/auth-store.ts";
 import {logout} from "@/security/auth/keycloak/keycloak.ts";
+import { useAuthStore } from "@/security/auth/authstore/auth-store";
 
 interface SecondarySidebarProps {
     children?: React.ReactNode
@@ -43,14 +43,22 @@ export function SecondarySidebar({ children }: SecondarySidebarProps) {
                 {children}
             </div>
             <div className="h-12 flex items-center justify-center border-t">
-                <Link to={"/profile"}>
-                    <Avatar>
-                        <AvatarImage />
-                        <AvatarFallback>OK</AvatarFallback>
-                    </Avatar>
-                </Link>
+                <UserAvatar />
             </div>
         </aside>
     )
 }
 
+function UserAvatar() {
+    const username = useAuthStore((state) => state.username);
+    const fallbackChar = username ? username.charAt(0).toUpperCase() : "?";
+
+    return (
+        <Link to={"/profile"}>
+            <Avatar className={"bg-red"}>
+                <AvatarImage />
+                <AvatarFallback>{fallbackChar}</AvatarFallback>
+            </Avatar>
+        </Link>
+    )
+}
