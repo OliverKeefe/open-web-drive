@@ -16,6 +16,7 @@ import { useFiles } from "@/app/features/files/hooks/use-files"
 import { getIconForFile } from "@react-symbols/icons/utils"
 import { FileDialog } from "@/app/features/files/components/file-dialog.tsx";
 import FileDropdown from "@/app/features/files/components/file-dropdown.tsx";
+import {IconButton} from "@/app/features/shared/components/buttons/icon-button.tsx";
 
 /**
  * Main file table component in files page.
@@ -85,9 +86,9 @@ export function FileTable() {
                         await refresh();
                     }}
                 />
-                <Button variant="outline"><Clock /></Button>
-                <Button variant="outline"><FolderPlus /></Button>
-                <Button variant="outline"><Star /></Button>
+                <IconButton label="Recents" className="cursor-pointer" icon={<Clock />} />
+                <IconButton label="New Folder" className="cursor-pointer" icon={<FolderPlus />} />
+                <IconButton label="Favourites" className="cursor-pointer" icon={<Star />} />
             </nav>
 
             <Table className="mt-2 w-full table-fixed">
