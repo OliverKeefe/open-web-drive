@@ -33,6 +33,7 @@ import type {MeterGaugeSegment} from "@/app/features/shared/components/gauges/me
 import {CardDescription, CardTitle} from "@/components/ui/card.tsx";
 import {MeterGauge} from "@/app/features/shared/components/gauges/meter-gauge.tsx";
 import {Container} from "@/app/features/shared/components/layout/container.tsx";
+import {Button} from "@/components/ui/button.tsx";
 
 interface FolderData {
   id: string;
@@ -100,11 +101,11 @@ const data = {
         url: "/settings",
         icon: Settings2,
       },
-      {
-        title: "Storage",
-        url: "#",
-        icon: Cloud,
-      },
+      //{
+      //  title: "Storage",
+      //  url: "#",
+      //  icon: Cloud,
+      //},
    ],
 }
 
@@ -151,21 +152,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <TeamSwitcher teams={data.teams} />
                 <NavMain items={data.navMain} />
             </SidebarHeader>
-
             <SidebarContent className="min-h-0">
                 <ScrollArea className="h-full [&_[data-radix-scroll-area-scrollbar]]:w-1" >
                     <NavSecondary items={data.navSecondary} className="mt-auto" />
-                    <div className="p-1 ml-3 mr-3">
-                        <p className="font-sans text-sm text-foreground">45 GB / 250 GB Remaining.</p>
-                        <MeterGauge
-                            segmentData={segdat}
-                            total={200}
-                            children={undefined}>
-                        </MeterGauge>
-                    </div>
                 </ScrollArea>
+                <div className="p-1 ml-3 mr-3 pb-2">
+                    <div className="flex flex-row items-center">
+                        <Cloud className="mr-2 mb-2"/>
+                        <p className="font-sans text-sm text-foreground mb-2">45 GB / 250 GB Remaining.</p>
+                    </div>
+                    <MeterGauge
+                        segmentData={segdat}
+                        total={250}
+                        children={undefined}>
+                    </MeterGauge>
+                    <div className="p-1 mt-2">
+                        <Button
+                            className="mx-auto block rounded-full"
+                            variant="outline">Get more storage
+                        </Button>
+                    </div>
+                </div>
             </SidebarContent>
-
             <SidebarRail />
         </Sidebar>
     )
