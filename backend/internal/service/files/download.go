@@ -1,6 +1,7 @@
 package files
 
 import (
+	"backend/internal/api/message"
 	"backend/internal/auth"
 	"context"
 	"errors"
@@ -37,8 +38,8 @@ func NewDownloadService(db downloadRepository, client downloadBlob, bucketUrl st
 }
 
 func (svc *DownloadService) Handle(w http.ResponseWriter, r *http.Request) {
-	var request DownloadRequest
-	if err := request.Bind(r); err != nil {
+	request, err := message.Bind[DownloadRequest](r)
+	if err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}

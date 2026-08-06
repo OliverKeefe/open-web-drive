@@ -30,6 +30,8 @@ func (svc *ScheduleDeleteService) TempDelete(w http.ResponseWriter, r *http.Requ
 	var request DeleteRequest
 
 	if err := request.Bind(r); err != nil {
+	request, err := message.Bind[scheduleDeleteRequest](r)
+	if err != nil {
 		log.Printf("unable to bind request to DeleteRequest %v", err)
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return

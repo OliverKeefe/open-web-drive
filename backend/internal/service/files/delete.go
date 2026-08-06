@@ -33,9 +33,8 @@ func NewDeleteService(db deleteRepository, client *platform.BlobStorageClient, b
 }
 
 func (svc *DeleteService) Handle(w http.ResponseWriter, r *http.Request) {
-	var request DeleteRequest
-
-	if err := request.Bind(r); err != nil {
+	request, err := message.Bind[DeleteRequest](r)
+	if err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}

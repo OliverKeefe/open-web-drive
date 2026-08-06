@@ -33,14 +33,12 @@ func NewSearchService(db searchRepository, client *platform.BlobStorageClient, b
 }
 
 func (svc *SearchService) Handle(w http.ResponseWriter, r *http.Request) {
-
 	if r.Body == nil || r.ContentLength <= 0 {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
-	var request GetAllMetadataRequest
-	err := request.Bind(r)
+	request, err := message.Bind[GetAllMetadataRequest](r)
 	if err != nil {
 		log.Printf("couldn't map http request to dto: %v", err)
 		http.Error(w, "invalid request", http.StatusBadRequest)
