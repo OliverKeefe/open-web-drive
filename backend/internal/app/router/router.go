@@ -5,7 +5,7 @@ import (
 	"backend/internal/database"
 	"backend/internal/middleware"
 	"backend/internal/platform"
-	files2 "backend/internal/service/files"
+	f "backend/internal/service/files"
 	"context"
 	"fmt"
 	"net/http"
@@ -29,13 +29,13 @@ func RegisterFileRoutes(mux *http.ServeMux, a *auth.Authenticator, db *database.
 		panic(err)
 	}
 
-	repository := files2.NewFileRepository(db.Pool)
+	repository := f.NewFileRepository(db.Pool)
 
-	uploadSvc := files2.NewUploadService(repository, client, bucketURL)
-	downloadSvc := files2.NewDownloadService(repository, client, bucketURL)
-	deleteSvc := files2.NewDeleteService(repository, client, bucketURL)
-	updateSvc := files2.NewUpdateMetadataService(repository, client, bucketURL)
-	searchSvc := files2.NewSearchService(repository, client, bucketURL)
+	uploadSvc := f.NewUploadService(repository, client, bucketURL)
+	downloadSvc := f.NewDownloadService(repository, client, bucketURL)
+	deleteSvc := f.NewDeleteService(repository, client, bucketURL)
+	updateSvc := f.NewUpdateMetadataService(repository, client, bucketURL)
+	searchSvc := f.NewSearchService(repository, client, bucketURL)
 
 	uploadEndpoint := route(a, uploadSvc.Handle)
 	mux.Handle(
