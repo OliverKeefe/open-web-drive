@@ -38,7 +38,7 @@ that I rent or an OpenStack / Bare Metal home lab.
 > 🏗️ Auth / Client-Side Encryption are currently undergoing a full re-write.
 
 ## 🚀 Quick Start
-** 📋 Prerequisites**
+**📋 Prerequisites**
 
 **[Terraform](https://developer.hashicorp.com/terraform/install)**
 
