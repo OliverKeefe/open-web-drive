@@ -1,7 +1,5 @@
-// TODO: use interceptor pattern or some kind of functional factory here instead of class.
-
 /**
-* Handles client-side REST requests and responses (POST, GET, PUT, CREATE, DELETE).
+* Handles client-side REST requests and responses (POST, GET, PUT, DELETE).
 * */
 import { useAuthStore } from "@/security/auth/authstore/auth-store.ts";
 
@@ -79,21 +77,6 @@ export class RestHandler {
         return await response.json();
     }
 
-    public async handleUpload<R = unknown>(
-        endpoint: string,
-        formPayload: FormData
-    ): Promise<R> {
-        const url = `${this.baseURL}/${endpoint}`;
-        const options: RequestInit = {
-            method: "POST",
-            body: formPayload
-        };
-
-        const response = await fetch(url, options);
-        await this.handleFailedRequest(response);
-        return await response.json();
-    }
-
     public async handleDelete<T, R = unknown>(endpoint: string, payload: T): Promise<R> {
         const token = useAuthStore.getState().token;
         const url = `${this.baseURL}/${endpoint}`;
@@ -106,22 +89,6 @@ export class RestHandler {
             body: JSON.stringify(payload)
         };
 
-        const response = await fetch(url, options);
-        await this.handleFailedRequest(response);
-        return await response.json();
-    }
-
-    public async handleCreate<T, R = unknown>(endpoint: string, payload: T): Promise<R> {
-        const userId = this.userId;
-        const token = this.token;
-        const url = `${this.baseURL}/${endpoint}${userId}`;
-        const options: RequestInit = {
-            method: "CREATE",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        };
         const response = await fetch(url, options);
         await this.handleFailedRequest(response);
         return await response.json();
