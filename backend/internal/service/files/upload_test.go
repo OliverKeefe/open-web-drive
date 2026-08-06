@@ -125,6 +125,8 @@ func Test_NewUploadService(t *testing.T) {
 }
 
 func TestUploadHandler_InvalidUploadRequest(t *testing.T) {
+	t.Setenv("MAX_UPLOAD_BYTES", "1048576")
+
 	tests := []struct {
 		name           string
 		uploadRequest  func(r *http.Request)
@@ -304,7 +306,7 @@ func TestUploadService_saveFileData(t *testing.T) {
 			name: "success",
 			blob: &mockBlobStorage{
 				multipartUploadFunc: func(ctx context.Context, key string, dataStream io.Reader, opts *blob.WriterOptions) error {
-					expectedKey := ownerID.String() + "-" + fileName
+					expectedKey := ownerID.String() + "/" + fileName
 					if key != expectedKey {
 						t.Errorf("MultipartUpload key = %q; want %q", key, expectedKey)
 					}

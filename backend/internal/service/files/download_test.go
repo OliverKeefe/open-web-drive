@@ -58,7 +58,7 @@ func TestDownloadService_Handle_Success(t *testing.T) {
 
 	blob := &mockDownloadBlob{
 		downloadFunc: func(ctx context.Context, key string, writer io.Writer, opts *blob.ReaderOptions) error {
-			expectedKey := ownerID.String() + "-report.pdf"
+			expectedKey := ownerID.String() + "/report.pdf"
 			if key != expectedKey {
 				t.Errorf("Download key = %q; want %q", key, expectedKey)
 			}
