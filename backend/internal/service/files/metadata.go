@@ -1,9 +1,6 @@
 package files
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,13 +58,6 @@ type GetAllMetadataRequest struct {
 	Limit  int             `json:"limit"`
 }
 
-func (req *GetAllMetadataRequest) Bind(r *http.Request) error {
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return fmt.Errorf("invalid json request: %w", err)
-	}
-	return nil
-}
-
 type MetadataCursor struct {
 	ModifiedAt time.Time `json:"modified_at"`
 	ID         uuid.UUID `json:"id"`
@@ -86,13 +76,6 @@ type FindMetadataRequest struct {
 	Group      []uuid.UUID `json:"group_id,omitempty"`
 	Hash       string      `json:"hash,omitempty"`
 	Version    int         `json:"version,omitempty"`
-}
-
-func (req *FindMetadataRequest) Bind(r *http.Request) error {
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (req *FindMetadataRequest) ToModel() FileMetadata {
@@ -114,20 +97,6 @@ type DeleteRequest struct {
 	ID uuid.UUID `json:"id"`
 }
 
-func (req *DeleteRequest) Bind(r *http.Request) error {
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		return err
-	}
-	return nil
-}
-
 type DownloadRequest struct {
 	ID uuid.UUID `json:"id"`
-}
-
-func (req *DownloadRequest) Bind(r *http.Request) error {
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		return fmt.Errorf("invalid json request: %w", err)
-	}
-	return nil
 }
