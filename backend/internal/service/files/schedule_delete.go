@@ -1,6 +1,7 @@
 package files
 
 import (
+	"backend/internal/api/message"
 	"backend/internal/auth"
 	"backend/internal/platform"
 	"context"
