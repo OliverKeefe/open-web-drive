@@ -41,10 +41,7 @@ func TestQuery_FindAllMetadata_NoCursor(t *testing.T) {
 		WithArgs(userID, limit).
 		WillReturnRows(rows)
 
-	res, err := repo.FindAllMetadata(ctx, GetAllMetadataRequest{
-		UserID: userID,
-		Limit:  limit,
-	})
+	res, err := repo.FindAllMetadata(ctx, userID, nil, limit)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,11 +88,7 @@ func TestQuery_FindAllMetadata_Cursor(t *testing.T) {
 		WithArgs(userID, cur.ModifiedAt, cur.ID, limit).
 		WillReturnRows(rows)
 
-	res, err := repo.FindAllMetadata(ctx, GetAllMetadataRequest{
-		UserID: userID,
-		Cursor: &cur,
-		Limit:  limit,
-	})
+	res, err := repo.FindAllMetadata(ctx, userID, &cur, limit)
 	if err != nil {
 		t.Fatal(err)
 	}
