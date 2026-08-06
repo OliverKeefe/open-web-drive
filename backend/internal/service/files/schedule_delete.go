@@ -13,7 +13,7 @@ import (
 )
 
 type scheduleDeleteRepository interface {
-	MarkForDeletion(ctx context.Context, id uuid.UUID, ownerId uuid.UUID) error
+	MarkForDeletion(ctx context.Context, id []uuid.UUID, ownerId uuid.UUID) error
 }
 
 type ScheduleDeleteService struct {
@@ -26,10 +26,7 @@ type scheduleDeleteRequest struct {
 	ID []uuid.UUID `json:"id"`
 }
 
-func (svc *ScheduleDeleteService) TempDelete(w http.ResponseWriter, r *http.Request) {
-	var request DeleteRequest
-
-	if err := request.Bind(r); err != nil {
+func (svc *ScheduleDeleteService) Handle(w http.ResponseWriter, r *http.Request) {
 	request, err := message.Bind[scheduleDeleteRequest](r)
 	if err != nil {
 		log.Printf("unable to bind request to DeleteRequest %v", err)
@@ -44,7 +41,7 @@ func (svc *ScheduleDeleteService) TempDelete(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (svc *ScheduleDeleteService) execute(ctx context.Context, request DeleteRequest) error {
+func (svc *ScheduleDeleteService) execute(ctx context.Context, request scheduleDeleteRequest) error {
 	userID, ok := auth.UserIDFromCtx(ctx)
 	if !ok {
 		return errors.New("unable to get userID from context")
