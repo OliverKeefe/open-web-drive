@@ -17,9 +17,9 @@
 **Open Web Drive** is a self-hostable, open-source file storage solution that provides total ownership of your data.
 Built for privacy-conscious individuals, it provides file management, client-side encryption, OAuth2.0 / OIDC and IPFS integration.
 
-**Why Did I Build This?** Aside from an excuse to finally learn Go and improve my frontend web development, I mostly just wanted to be able to host 
-a file storage app like OneDrive or Google Drive where I could just host it on my own infrastructure; be that a public cloud / hyperscalar tenant or
-an OpenStack home lab.
+**Why Did I Build This?** Aside from an excuse to finally learn Go and React.js, I mostly just wanted to be able to host 
+a file storage app like OneDrive or Google Drive where I could host it on my own infrastructure; be that a deployment to a public cloud / hyperscalar tenant 
+that I rent or an OpenStack / Bare Metal home lab.
 
 
 <h2 align="center">UI Screenshots</h2>
