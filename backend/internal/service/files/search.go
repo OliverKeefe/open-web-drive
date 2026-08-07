@@ -75,7 +75,7 @@ func (svc *SearchService) execute(ctx context.Context, request GetAllMetadataReq
 
 	response := make([]FileMetadataResponse, len(files))
 	for i, file := range files {
-		response[i] = FileMetadataResponse(file)
+		response[i] = file
 	}
 
 	return response, nil
