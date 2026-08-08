@@ -56,7 +56,7 @@ that I rent or an OpenStack / Bare Metal home lab.
 
 **Clone the repository**
 ```shell
-versions clone https://github.com/OliverKeefe/open-web-drive.git 
+git clone https://github.com/OliverKeefe/open-web-drive.git 
 ```
 
 Once you've cloned the repository, change your working directory to ~/open-web-drive and
@@ -68,8 +68,7 @@ chmod +x /scripts/setup.sh && ./scripts/setup.sh
 
 **Run in Dev Mode**
 ```shell
-chmod +x /open-web-drive/scripts/build.sh
-/open-web-drive/scripts/build.sh
+chmod +x ./scripts/build.sh &&./scripts/build.sh
 ```
 
 📄 License
