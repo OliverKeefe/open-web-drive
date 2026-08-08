@@ -3,10 +3,8 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import Login from "@/app/features/auth/pages/login-page";
 import { Files } from "@/app/features/files/pages/files-page";
 import Settings from "@/app/features/settings/pages/settings-page";
-import HotStoragePage from "@/app/features/storage/pages/hot-storage-page";
 import ArchivePage from "@/app/features/archive/pages/archive-page";
 import ProfilePage from "@/app/features/profile/pages/profile-page";
 import Layout from "@/app/features/shared/components/layout/layout";
@@ -20,12 +18,6 @@ const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: Files,
-});
-
-const loginRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/login",
-  component: Login,
 });
 
 const filesRoute = createRoute({
@@ -46,12 +38,6 @@ const versionControlRoute = createRoute({
   component: VersionControlPage,
 });
 
-const hotStorageRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/hot-storage-settings",
-  component: HotStoragePage,
-});
-
 const archiveRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/archive",
@@ -66,11 +52,9 @@ const profileRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  loginRoute,
   filesRoute,
   settingsRoute,
   versionControlRoute,
-  hotStorageRoute,
   archiveRoute,
   profileRoute,
 ]);
