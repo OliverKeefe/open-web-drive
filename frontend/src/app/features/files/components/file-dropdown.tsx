@@ -15,12 +15,13 @@ import {enqueueSnackbar} from "notistack";
 interface FileDropdownProps {
     fileId: string;
     onDeleted: () => void;
+    onInfo: () => void;
 }
 
 const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
 if (!backendBaseUrl) throw new Error('VITE_BACKEND_BASE_URL is not set. Set it in your .env file or pass it at build time.');
 
-function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
+function FileDropdown({ fileId, onDeleted, onInfo }: FileDropdownProps) {
     const userId = useAuthStore((s) => s.userId);
 
     async function handleDelete(e: React.MouseEvent) {
@@ -68,6 +69,11 @@ function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
         }
     }
 
+    function handleInfo(e: React.MouseEvent) {
+        e.stopPropagation();
+        onInfo();
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -96,7 +102,7 @@ function FileDropdown({ fileId, onDeleted }: FileDropdownProps) {
                 </ConfirmAlertDialog>
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem className="cursor-pointer" onClick={handleInfo}>
                     <Info className="mr-2 h-4 w-4" />
                     <span>File Info</span>
                 </DropdownMenuItem>

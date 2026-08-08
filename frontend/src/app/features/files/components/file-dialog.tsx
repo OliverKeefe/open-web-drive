@@ -1,9 +1,7 @@
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx";
+import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog.tsx";
 import type {Metadata} from "@/app/features/files/types.ts";
-import {useState} from "react";
-import {Button} from "@/components/ui/button.tsx";
-import {EllipsisVertical} from "lucide-react";
 import {DialogDescription} from "@radix-ui/react-dialog";
+import { formatDate } from "@/app/features/files/util/format";
 
 interface FileDialogProps{
     open: boolean,
@@ -18,9 +16,6 @@ export function FileDialog({
                                open,
                                onOpenChange,
                                metadata,
-                               ipfsLink,
-                               spaceName,
-                               spaceDid,
                            }: FileDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,7 +36,6 @@ export function FileDialog({
                         : "11/02/2026 11:38:42"}
                 </h2>
                 <h2>{metadata.id}</h2>
-                <h2>{metadata.owner_id}</h2>
             </DialogContent>
         </Dialog>
     );

@@ -9,7 +9,6 @@ import {
 import { useEffect, useRef, useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { UploadDialog } from "@/app/features/shared/components/dialog/upload-dialog"
-import { Button } from "@/components/ui/button"
 import { Clock, FolderPlus, Star } from "lucide-react"
 import type { Metadata } from "@/app/features/files/types.ts"
 import { useFiles } from "@/app/features/files/hooks/use-files"
@@ -17,6 +16,7 @@ import { getIconForFile } from "@react-symbols/icons/utils"
 import { FileDialog } from "@/app/features/files/components/file-dialog.tsx";
 import FileDropdown from "@/app/features/files/components/file-dropdown.tsx";
 import {IconButton} from "@/app/features/shared/components/buttons/icon-button.tsx";
+import { formatDate } from "@/app/features/files/util/format";
 
 /**
  * Main file table component in files page.
@@ -109,32 +109,33 @@ export function FileTable() {
 
                 <TableBody>
                     {files.map((file) => (
-                        <TableRow key={file.id} className="cursor-pointer">
-                            <TableCell>
+                        <TableRow key={file.id} className="cursor-pointer" onClick={() => toggleSelect(file.id)}>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                                 <Checkbox
                                     checked={selected.includes(file.id)}
                                     onCheckedChange={() => toggleSelect(file.id)}
                                 />
                             </TableCell>
 
-                            <TableCell onClick={() => openDialog(file)}>
+                            <TableCell>
                                 <div className="w-4">
                                     {getIconForFile({ fileName: file.file_name })}
                                 </div>
                             </TableCell>
 
-                            <TableCell onClick={() => openDialog(file)}>
+                            <TableCell>
                                 <p className="truncate">{file.file_name}</p>
                             </TableCell>
 
-                            <TableCell onClick={() => openDialog(file)}>
+                            <TableCell>
                                 <p className="truncate">{formatDate(file.modified_at)}</p>
                             </TableCell>
 
-                            <TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                                 <FileDropdown
                                     fileId={file.id}
                                     onDeleted={handleFileDeleted}
+                                    onInfo={() => openDialog(file)}
                                 />
                             </TableCell>
                         </TableRow>
@@ -161,14 +162,4 @@ export function FileTable() {
             )}
         </div>
     )
-}
-
-/**
- * Helper function to format date to human-readable format, backend
- * returns a timestamp.
- * @param date - date as a string.
- * @return string - date as string.
- * */
-function formatDate(date: string): string {
-    return new Date(date).toLocaleString()
 }
