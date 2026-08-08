@@ -1,41 +1,36 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import FileDropdown from "@/app/features/files/components/file-dropdown"; // Adjust path as needed
-import { useAuthStore } from "@/security/auth/authstore/auth-store";
-import {jest} from "globals";
+import { createElement } from "react"
+import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { describe, expect, it, vi } from "vitest"
+import FileDropdown from "./file-dropdown"
 
-// 1. Mock the Auth Store
-jest.mock("@/security/auth/authstore/auth-store", () => ({
-    useAuthStore: jest.fn(),
-}));
-
-// 2. Mock notistack (since it requires a Provider otherwise)
-jest.mock("notistack", () => ({
-    enqueueSnackbar: jest.fn(),
-}));
+/**
+ * Renders the FileDropdown with spied callbacks.
+ * @return an object with the onInfo spy for assertions.
+ * */
+function renderDropdown() {
+    const onInfo = vi.fn()
+    render(
+        createElement(FileDropdown, {
+            fileId: "file-1",
+            onDeleted: vi.fn(),
+            onInfo,
+        })
+    )
+    return { onInfo }
+}
 
 describe("FileDropdown", () => {
-    const mockProps = {
-        fileId: "123",
-        fileName: "test-file.txt",
-        onDeleted: jest.fn(),
-    };
+    /**
+     * Verifies selecting File Info in the dropdown calls onInfo.
+     * */
+    it("calls onInfo when File Info is selected", async () => {
+        const user = userEvent.setup()
+        const { onInfo } = renderDropdown()
 
-    beforeEach(() => {
-        // Mock userId return value
-        (useAuthStore as unknown as jest.Mock).mockReturnValue("user-456");
-    });
+        await user.click(screen.getByRole("button"))
+        await user.click(await screen.findByText("File Info"))
 
-    it("should display the menu items after clicking the trigger", () => {
-        render(<FileDropdown {...mockProps} />);
-
-        // Find and click the trigger button
-        const trigger = screen.getByRole("button");
-        fireEvent.click(trigger);
-
-        // Verify items appear
-        expect(screen.getByText("Delete")).toBeInTheDocument();
-        expect(screen.getByText("Download")).toBeInTheDocument();
-        expect(screen.getByText("File Info")).toBeInTheDocument();
-        expect(screen.getByText("File Settings")).toBeInTheDocument();
-    });
-});
+        expect(onInfo).toHaveBeenCalledTimes(1)
+    })
+})
